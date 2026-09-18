@@ -37,7 +37,9 @@ import type {
 
 import type {
   CalendarEvent,
-  JobPostingRequest} from './api/types';
+  JobPostingRequest,
+  Role,
+} from './api/types';
 
 import {
   alumniApi,
@@ -53,6 +55,7 @@ import { jobPostingApi } from './api/jobPostingApi';
 import { recruiterApi } from './api/recruiterApi';
 import { calendarApi } from './api/calendarApi';
 import { applicationApi } from './api/applicationApi';
+import { authApi } from './api/authApi';
 
 import {
   LogOut,
@@ -460,6 +463,7 @@ function AppContent() {
   useEffect(() => {
     const handleUnauthorized = () => {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('role');
       localStorage.removeItem('placed_session');
       setSession(null);
@@ -659,8 +663,23 @@ function AppContent() {
      LOGOUT
   ======================================================= */
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    const storedRole = localStorage.getItem('role') as Role | null;
+
+    if (refreshToken) {
+      try {
+        await authApi.logout({
+          refreshToken,
+          role: storedRole || undefined,
+        });
+      } catch (err) {
+        console.warn('Backend logout call returned error:', err);
+      }
+    }
+
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('role');
     localStorage.removeItem('placed_session');
     setSession(null);

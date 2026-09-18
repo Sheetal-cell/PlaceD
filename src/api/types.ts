@@ -173,7 +173,13 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
   role: Role;
+}
+
+export interface RefreshRequest {
+  refreshToken: string;
+  role?: Role;
 }
 
 export interface StudentDashboardResponse {
