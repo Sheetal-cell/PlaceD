@@ -254,11 +254,7 @@ export const alumniApi = {
     if (requestData.email) {
       markAlumniPending(requestData.email);
     }
-    const allAlumni = await this.getAll().catch(() => []);
-    const newAlumni = allAlumni.find(
-      (a) => a.email.toLowerCase().trim() === requestData.email.toLowerCase().trim()
-    );
-    return newAlumni || {
+    return {
       id: String(Date.now()),
       name: requestData.name,
       email: requestData.email,
@@ -375,8 +371,8 @@ export const alumniApi = {
     // No-op: Data is maintained in PostgreSQL database
   },
 
-  async createBlog(alumniId: string | number, requestData: BlogRequest): Promise<any> {
-    return request<string>('/blog/add', {
+  async createBlog(alumniId: string | number, requestData: BlogRequest): Promise<Blog> {
+    await request<string>('/blog/add', {
       method: 'POST',
       body: JSON.stringify({
         title: requestData.title,
@@ -384,10 +380,24 @@ export const alumniApi = {
         alumniId: Number(alumniId)
       }),
     });
+
+    const now = new Date().toISOString().split('T')[0];
+    return {
+      id: String(Date.now()),
+      title: requestData.title,
+      description: requestData.description || requestData.content || '',
+      content: requestData.content || requestData.description || '',
+      category: requestData.category || 'General',
+      postedDate: now,
+      createdAt: now,
+      updatedAt: now,
+      alumniId: String(alumniId),
+      published: requestData.published ?? true
+    };
   },
 
-  async updateBlog(id: string | number, requestData: BlogRequest): Promise<any> {
-    return request<string>(`/blog/update/${id}`, {
+  async updateBlog(id: string | number, requestData: BlogRequest): Promise<Blog> {
+    await request<string>(`/blog/update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
         id: Number(id),
@@ -396,6 +406,20 @@ export const alumniApi = {
         alumniId: Number(requestData.alumniId || 1)
       }),
     });
+
+    const now = new Date().toISOString().split('T')[0];
+    return {
+      id: String(id),
+      title: requestData.title,
+      description: requestData.description || requestData.content || '',
+      content: requestData.content || requestData.description || '',
+      category: requestData.category || 'General',
+      postedDate: now,
+      createdAt: now,
+      updatedAt: now,
+      alumniId: String(requestData.alumniId || 1),
+      published: requestData.published ?? true
+    };
   },
 
   async deleteBlog(id: string | number): Promise<void> {

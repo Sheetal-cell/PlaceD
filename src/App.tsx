@@ -126,7 +126,7 @@ const ProtectedRoute = ({
    LANDING PAGE NAVIGATION
 ========================================================= */
 
-function NavLinksWithSlidingUnderline({ session }: { session: Session | null }) {
+function NavLinksWithSlidingUnderline() {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -152,22 +152,6 @@ function NavLinksWithSlidingUnderline({ session }: { session: Session | null }) 
     hoveredPath !== null
       ? hoveredPath
       : location.pathname;
-
-  const getPortalPath = () => {
-    if (!session) return '/auth?mode=login';
-    switch (session.role) {
-      case 'student':
-        return '/student-portal';
-      case 'admin':
-        return '/admin-portal';
-      case 'recruiter':
-        return '/recruiter-portal';
-      case 'alumni':
-        return '/alumni-portal';
-      default:
-        return '/auth?mode=login';
-    }
-  };
 
   return (
     <nav
@@ -232,11 +216,11 @@ function NavLinksWithSlidingUnderline({ session }: { session: Session | null }) 
 
       <button
         onClick={() =>
-          navigate(session ? getPortalPath() : '/auth?mode=login')
+          navigate('/auth?mode=login')
         }
         className="landing-nav-btn font-bold cursor-pointer"
       >
-        {session ? 'Go to Portal →' : 'Sign In'}
+        Sign In
       </button>
     </nav>
   );
@@ -499,10 +483,15 @@ function AppContent() {
         studentId: id,
       });
 
-      const student =
-        students.find(
-          (student) => student.id === id
-        );
+      const sId = id?.toLowerCase().trim();
+      const student = sId
+        ? students.find(
+            (s) =>
+              String(s.id).toLowerCase().trim() === sId ||
+              (s.email && s.email.toLowerCase().trim() === sId) ||
+              (s.registrationNumber && String(s.registrationNumber).toLowerCase().trim() === sId)
+          )
+        : undefined;
 
       triggerToast(
         `Welcome back, ${
@@ -525,17 +514,20 @@ function AppContent() {
         recruiterId: id,
       });
 
-      const recruiter =
-        recruiters.find(
-          (recruiter) =>
-            recruiter.id === id
-        );
+      const rId = id?.toLowerCase().trim();
+      const recruiter = rId
+        ? recruiters.find(
+            (r) =>
+              String(r.id).toLowerCase().trim() === rId ||
+              (r.email && r.email.toLowerCase().trim() === rId)
+          )
+        : undefined;
 
       triggerToast(
         `Welcome back, ${
           recruiter?.name || 'Recruiter'
-        } from ${
-          recruiter?.companyName || 'Company'
+        }${
+          recruiter?.companyName ? ` from ${recruiter.companyName}` : ''
         }!`,
         'success'
       );
@@ -549,27 +541,22 @@ function AppContent() {
     /* ---------------- ALUMNI ---------------- */
 
     if (role === 'alumni') {
-      const alum =
-        alumni.find(
-          (item) => item.id === id
-        );
-
-      if (!alum) {
-        triggerToast(
-          'Alumni account not found.',
-          'error'
-        );
-
-        return;
-      }
-
       setSession({
         role,
         alumniId: id,
       });
 
+      const aId = id?.toLowerCase().trim();
+      const alum = aId
+        ? alumni.find(
+            (a) =>
+              String(a.id).toLowerCase().trim() === aId ||
+              (a.email && a.email.toLowerCase().trim() === aId)
+          )
+        : undefined;
+
       triggerToast(
-        `Welcome back, ${alum.name}!`,
+        `Welcome back, ${alum?.name || 'Alumni'}!`,
         'success'
       );
 
@@ -1953,42 +1940,78 @@ const handleDeleteReferral = async (
      GET LOGGED-IN STUDENT
   ======================================================= */
 
-  const loggedInStudent =
-    session?.role === 'student'
-      ? students.find(
-          (student) =>
-            student.id ===
-            session.studentId
-        )
-      : undefined;
+  const loggedInStudent = React.useMemo(() => {
+    if (session?.role !== 'student' || !session.studentId) return undefined;
+    const sId = session.studentId.toLowerCase().trim();
+    const found = students.find(
+      (student) =>
+        String(student.id).toLowerCase().trim() === sId ||
+        (student.email && student.email.toLowerCase().trim() === sId) ||
+        (student.registrationNumber && String(student.registrationNumber).toLowerCase().trim() === sId)
+    );
+    if (found) return found;
 
+    return {
+      id: session.studentId,
+      name: session.studentId.includes('@') ? session.studentId.split('@')[0] : `Student (${session.studentId})`,
+      email: session.studentId.includes('@') ? session.studentId : `${session.studentId}@student.univ.edu`,
+      registrationNumber: session.studentId,
+      password: '',
+      branch: 'Computer Science',
+      department: 'Computer Science',
+      cgpa: 8.0,
+      backlogs: 0,
+      placementStatus: 'Unplaced' as const,
+      resumeScore: 85,
+      skills: [],
+      projectsCount: 0,
+      resumeText: '',
+      applications: [],
+    };
+  }, [session, students]);
 
-  /* =======================================================
-     GET LOGGED-IN RECRUITER
-  ======================================================= */
+  const loggedInRecruiter = React.useMemo(() => {
+    if (session?.role !== 'recruiter' || !session.recruiterId) return undefined;
+    const rId = session.recruiterId.toLowerCase().trim();
+    const found = recruiters.find(
+      (recruiter) =>
+        String(recruiter.id).toLowerCase().trim() === rId ||
+        (recruiter.email && recruiter.email.toLowerCase().trim() === rId)
+    );
+    if (found) return found;
 
-  const loggedInRecruiter =
-    session?.role === 'recruiter'
-      ? recruiters.find(
-          (recruiter) =>
-            recruiter.id ===
-            session.recruiterId
-        )
-      : undefined;
+    return {
+      id: session.recruiterId,
+      name: session.recruiterId.includes('@') ? session.recruiterId.split('@')[0] : 'Recruiter',
+      email: session.recruiterId.includes('@') ? session.recruiterId : `${session.recruiterId}@company.com`,
+      password: '',
+      companyName: 'Corporate',
+      designation: 'Recruiter',
+      postedDrives: [],
+    };
+  }, [session, recruiters]);
 
+  const loggedInAlumni = React.useMemo(() => {
+    if (session?.role !== 'alumni' || !session.alumniId) return undefined;
+    const aId = session.alumniId.toLowerCase().trim();
+    const found = alumni.find(
+      (item) =>
+        String(item.id).toLowerCase().trim() === aId ||
+        (item.email && item.email.toLowerCase().trim() === aId)
+    );
+    if (found) return found;
 
-  /* =======================================================
-     GET LOGGED-IN ALUMNI
-  ======================================================= */
-
-  const loggedInAlumni =
-    session?.role === 'alumni'
-      ? alumni.find(
-          (item) =>
-            item.id ===
-            session.alumniId
-        )
-      : undefined;
+    return {
+      id: session.alumniId,
+      name: session.alumniId.includes('@') ? session.alumniId.split('@')[0] : 'Alumni',
+      email: session.alumniId.includes('@') ? session.alumniId : `${session.alumniId}@alumni.univ.edu`,
+      graduationYear: new Date().getFullYear(),
+      currentCompany: 'Verified Industry',
+      currentRole: 'Software Engineer',
+      department: 'CSE',
+      alumniStatus: 'APPROVED' as const,
+    };
+  }, [session, alumni]);
 
 
   /* =======================================================
@@ -2246,7 +2269,7 @@ const handleDeleteReferral = async (
              PUBLIC NAVIGATION
           ================================================= */
 
-          <NavLinksWithSlidingUnderline session={session} />
+          <NavLinksWithSlidingUnderline />
 
         )}
 

@@ -64,11 +64,33 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
 
-  // Scoped to this recruiter's own company drives (matches by recruiterId, companyId, or companyName)
+  // Scoped strictly to this recruiter's owned company drives
   const myDrives = drives.filter((d) => {
-    if (d.recruiterId && recruiter.id && String(d.recruiterId) === String(recruiter.id)) return true;
-    if (d.companyId && (recruiter as any).companyId && String(d.companyId) === String((recruiter as any).companyId)) return true;
-    if (d.companyName && recruiter.companyName && d.companyName.trim().toLowerCase() === recruiter.companyName.trim().toLowerCase()) return true;
+    // 1. Explicit recruiter ownership check
+    if (d.recruiterId != null && recruiter.id != null) {
+      return String(d.recruiterId) === String(recruiter.id);
+    }
+
+    // Exclude drives created by TPO, scraped datasets, off-campus, or other non-recruiter sources
+    if (
+      d.sourceType === 'TPO' ||
+      d.sourceType === 'SCRAPER' ||
+      d.sourceType === 'DATASET' ||
+      d.recruitmentType === 'OFF_CAMPUS'
+    ) {
+      return false;
+    }
+
+    // 2. Company ID match (only if no explicit conflicting recruiterId)
+    if (d.companyId && (recruiter as any).companyId && String(d.companyId) === String((recruiter as any).companyId)) {
+      return true;
+    }
+
+    // 3. Fallback company name match (only for recruiter-scoped drives without conflicting recruiterId)
+    if (d.companyName && recruiter.companyName && d.companyName.trim().toLowerCase() === recruiter.companyName.trim().toLowerCase()) {
+      return true;
+    }
+
     return false;
   });
 

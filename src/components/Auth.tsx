@@ -1446,10 +1446,10 @@ export const Auth: React.FC<AuthProps> = ({
                             }
                             required
                             value={
-                              studentPassword
+                              alumniPassword
                             }
                             onChange={(e) =>
-                              setStudentPassword(
+                              setAlumniPassword(
                                 e.target.value
                               )
                             }
