@@ -424,6 +424,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             {/* INTERVIEW */}
             {activeTab === 'interview' && (
               <StudentInterviewView
+                currentStudent={currentStudent}
                 interviewRole={interviewRole}
                 setInterviewRole={setInterviewRole}
                 interviewQuestions={interviewQuestions}
