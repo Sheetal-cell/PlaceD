@@ -62,6 +62,8 @@ import {
   Shield,
   Building2,
   Award,
+  Menu,
+  X,
 } from 'lucide-react';
 
 import { motion } from 'motion/react';
@@ -130,13 +132,14 @@ function NavLinksWithSlidingUnderline() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [hoveredPath, setHoveredPath] =
-    useState<string | null>(null);
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = React.useRef<HTMLDivElement>(null);
 
-  const navItems = [
+  const desktopNavItems = [
     {
       path: '/',
-      label: 'Home',
+      label: 'About',
     },
     {
       path: '/features',
@@ -148,81 +151,152 @@ function NavLinksWithSlidingUnderline() {
     },
   ];
 
+  const mobileNavItems = [
+    {
+      path: '/',
+      label: 'About',
+    },
+    {
+      path: '/how-it-works',
+      label: 'How It Works',
+    },
+    {
+      path: '/features',
+      label: 'Features',
+    },
+  ];
+
   const activePath =
     hoveredPath !== null
       ? hoveredPath
       : location.pathname;
 
+  // Close mobile dropdown menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    if (isMobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
   return (
-    <nav
-      className="landing-nav-links"
-      onMouseLeave={() => setHoveredPath(null)}
-    >
-      {navItems.map((item) => {
-        const isRouteActive =
-          location.pathname === item.path;
-
-        const isTargeted =
-          activePath === item.path;
-
-        return (
-          <Link
-            key={item.path}
-            to={item.path}
-            onMouseEnter={() =>
-              setHoveredPath(item.path)
-            }
-            className={`
-              landing-nav-link
-              relative
-              py-1
-              px-1
-              transition-colors
-              duration-200
-              ${
-                isRouteActive
-                  ? 'text-blue-600 font-bold'
-                  : 'text-slate-700 hover:text-blue-600'
-              }
-            `}
-          >
-            <span className="relative z-10">
-              {item.label}
-            </span>
-
-            {isTargeted && (
-              <motion.div
-                layoutId="landing-nav-sliding-underline"
-                className="
-                  absolute
-                  -bottom-0.5
-                  left-0
-                  right-0
-                  h-[2.5px]
-                  bg-blue-600
-                  rounded-full
-                  pointer-events-none
-                "
-                transition={{
-                  type: 'spring',
-                  stiffness: 450,
-                  damping: 32,
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
-
-      <button
-        onClick={() =>
-          navigate('/auth?mode=login')
-        }
-        className="landing-nav-btn font-bold cursor-pointer"
+    <div className="flex items-center gap-2 relative" ref={mobileMenuRef}>
+      <nav
+        className="landing-nav-links"
+        onMouseLeave={() => setHoveredPath(null)}
       >
-        Sign In
+        {desktopNavItems.map((item) => {
+          const isRouteActive =
+            location.pathname === item.path;
+
+          const isTargeted =
+            activePath === item.path;
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onMouseEnter={() =>
+                setHoveredPath(item.path)
+              }
+              className={`
+                landing-nav-link
+                relative
+                py-1
+                px-1
+                transition-colors
+                duration-200
+                hidden sm:inline-block
+                ${
+                  isRouteActive
+                    ? 'text-blue-600 font-bold'
+                    : 'text-slate-700 hover:text-blue-600'
+                }
+              `}
+            >
+              <span className="relative z-10">
+                {item.label}
+              </span>
+
+              {isTargeted && (
+                <motion.div
+                  layoutId="landing-nav-sliding-underline"
+                  className="
+                    absolute
+                    -bottom-0.5
+                    left-0
+                    right-0
+                    h-[2.5px]
+                    bg-blue-600
+                    rounded-full
+                    pointer-events-none
+                  "
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                  }}
+                />
+              )}
+            </Link>
+          );
+        })}
+
+        <button
+          onClick={() =>
+            navigate('/auth?mode=login')
+          }
+          className="landing-nav-btn font-bold cursor-pointer shrink-0"
+        >
+          Sign In
+        </button>
+      </nav>
+
+      {/* Mobile Menu Trigger Button (Visual borderless 3-line hamburger with reference touch target size) */}
+      <button
+        type="button"
+        onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        className="sm:hidden px-3.5 py-2 text-slate-700 hover:text-blue-600 transition-colors cursor-pointer flex items-center justify-center shrink-0 min-h-[42px] focus:outline-none"
+        title="Navigation Menu"
+        aria-label="Toggle Mobile Navigation Menu"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
-    </nav>
+
+      {/* Perfected Navigation Dropdown Menu Card on Mobile with Centered Contents */}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden absolute top-full right-0 mt-3.5 w-60 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl p-3 z-50 animate-fade-in flex flex-col gap-1.5">
+          {mobileNavItems.map((item) => {
+            const isRouteActive = location.pathname === item.path;
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center justify-center text-center px-4 py-3 rounded-xl text-sm font-extrabold min-h-[46px] transition-all cursor-pointer ${
+                  isRouteActive
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : 'text-slate-700 hover:bg-blue-50/80 hover:text-blue-600 border border-transparent'
+                }`}
+              >
+                <span className="text-center">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

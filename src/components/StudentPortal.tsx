@@ -331,25 +331,35 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     onUpdateStudentProfile(updatedStudent);
   };
 
+const TAB_LABELS: Record<StudentTabType, string> = {
+  dashboard: 'Dashboard',
+  drives: 'Placement Drives',
+  calendar: 'Placement Calendar',
+  ats: 'ATS Resume Scorer',
+  interview: 'Mock Interview Simulator',
+  visualizer: 'Recruitment Pipeline',
+  alumni: 'Alumni Network',
+  profile: 'Profile Settings',
+};
+
   return (
     <div className="sp-layout">
       {/* Mobile Top Bar */}
-      <div className="md:hidden sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 py-3 flex items-center justify-between shadow-2xs">
+      <div className="md:hidden sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 h-16 flex items-center justify-between gap-4 shadow-2xs">
         <button
           onClick={() => setIsMobileDrawerOpen(true)}
-          className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs border border-blue-200/80 transition-all cursor-pointer flex items-center gap-2 shadow-2xs active:scale-95"
+          className="px-4 py-2.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/90 text-blue-900 font-extrabold text-sm border border-blue-200/80 transition-all cursor-pointer flex items-center gap-2.5 shadow-2xs active:scale-95 shrink-0 min-h-[44px]"
+          aria-label="Open Navigation Drawer"
         >
-          <Menu
-            size={18}
-            className="text-blue-600 shrink-0"
-          />
-
-          <span>Navigation Menu</span>
+          <Menu size={22} className="text-blue-600 shrink-0" />
+          <span className="font-display">Menu</span>
         </button>
 
-        <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/80 font-mono">
-          {activeTab}
-        </span>
+        <div className="flex items-center gap-2 min-w-0 text-right">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-display truncate">
+            {TAB_LABELS[activeTab] || activeTab}
+          </span>
+        </div>
       </div>
 
       <div className="sp-main-shell">

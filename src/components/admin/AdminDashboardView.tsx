@@ -104,49 +104,51 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       </div>
 
       {/* Analytics Visual Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         {/* Chart 1: Drives package distribution */}
-        <div className="ap-card flex flex-col gap-5 p-6 sm:p-7">
+        <div className="ap-card flex flex-col gap-5 p-6 sm:p-7 min-w-0 max-w-full overflow-hidden">
           <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
             <TrendingUp size={20} className="text-blue-600" />
             Salary Package Distribution (LPA)
           </h3>
 
-          <div className="flex items-end justify-around pt-8 border-b border-l border-slate-200 pb-3 min-h-[240px]">
-            {effectiveDrives.map((drive) => {
-              const maxHeight = 160;
-              const pkgNum = typeof drive.numericPackage === 'number' && !isNaN(drive.numericPackage) ? drive.numericPackage : 0;
-              const maxPackage = Math.max(
-                ...effectiveDrives.map((d) => (typeof d.numericPackage === 'number' && !isNaN(d.numericPackage) ? d.numericPackage : 0)),
-                35
-              );
-              const barHeight = maxPackage > 0 ? (pkgNum / maxPackage) * maxHeight : 0;
+          <div className="w-full overflow-x-auto pb-4 pt-2">
+            <div className="flex items-end justify-start sm:justify-around gap-6 pt-10 border-b border-l border-slate-200 pb-3 min-h-[240px] min-w-max px-2">
+              {effectiveDrives.map((drive) => {
+                const maxHeight = 150;
+                const pkgNum = typeof drive.numericPackage === 'number' && !isNaN(drive.numericPackage) ? drive.numericPackage : 0;
+                const maxPackage = Math.max(
+                  ...effectiveDrives.map((d) => (typeof d.numericPackage === 'number' && !isNaN(d.numericPackage) ? d.numericPackage : 0)),
+                  35
+                );
+                const barHeight = maxPackage > 0 ? (pkgNum / maxPackage) * maxHeight : 0;
 
-              return (
-                <div key={drive.id} className="flex flex-col items-center group w-12 relative">
-                  <span className="absolute -top-7 bg-slate-900 text-white text-[11px] px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity font-mono z-10 whitespace-nowrap shadow-xs">
-                    {drive.package}
-                  </span>
+                return (
+                  <div key={drive.id} className="flex flex-col items-center group w-14 shrink-0 relative">
+                    <span className="absolute -top-8 bg-slate-900 text-white text-[11px] px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity font-mono z-10 whitespace-nowrap shadow-xs pointer-events-none">
+                      {drive.package}
+                    </span>
 
-                  <div
-                    className="w-8 rounded-t-md transition-all duration-300"
-                    style={{
-                      height: `${Math.max(barHeight, 10)}px`,
-                      background: `linear-gradient(to top, #2563EB, #4F46E5)`
-                    }}
-                  />
+                    <div
+                      className="w-9 rounded-t-md transition-all duration-300 shadow-2xs"
+                      style={{
+                        height: `${Math.max(barHeight, 12)}px`,
+                        background: `linear-gradient(to top, #2563EB, #4F46E5)`
+                      }}
+                    />
 
-                  <p className="text-xs text-slate-600 font-semibold mt-2.5 truncate w-full text-center" title={drive.companyName}>
-                    {drive.companyName}
-                  </p>
-                </div>
-              );
-            })}
+                    <p className="text-xs text-slate-700 font-extrabold mt-2.5 truncate w-full text-center" title={drive.companyName}>
+                      {drive.companyName}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Chart 2: Department Placement Rates */}
-        <div className="ap-card flex flex-col gap-5 p-6 sm:p-7">
+        <div className="ap-card flex flex-col gap-5 p-6 sm:p-7 min-w-0 max-w-full overflow-hidden">
           <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
             <Users size={20} className="text-indigo-600" />
             Placement Rates by Department

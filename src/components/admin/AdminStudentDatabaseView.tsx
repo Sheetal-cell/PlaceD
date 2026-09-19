@@ -146,28 +146,24 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
             Review academic qualifications, filter by department & CGPA thresholds, edit placement statuses, and inspect candidate resumes.
           </p>
         </div>
-        <div className="flex items-center gap-3 self-start sm:self-center">
-  <div className="flex items-center gap-3 self-start sm:self-center">
-  <button
-    onClick={onDownloadStudents}
-    disabled={filteredStudents.length === 0}
-    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-extrabold transition-all shadow-sm flex items-center gap-2"
-  >
-    <FileText size={16} />
-    Download Database
-  </button>
+        <div className="flex items-center gap-3 self-start sm:self-center flex-wrap">
+          <button
+            onClick={onDownloadStudents}
+            disabled={filteredStudents.length === 0}
+            className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileText size={18} />
+            Download Database
+          </button>
 
-  <div className="px-4 py-2 bg-slate-100 rounded-xl text-xs text-slate-700 font-bold">
-    Showing{' '}
-    <span className="text-blue-600 font-bold">
-      {filteredStudents.length}
-    </span>{' '}
-    of {allStudents.length} Candidates
-  </div>
-</div>
-
-  
-</div>
+          <div className="px-4 py-2.5 bg-slate-100 rounded-xl text-xs text-slate-700 font-extrabold border border-slate-200/80 shadow-2xs">
+            Showing{' '}
+            <span className="text-blue-600 font-extrabold">
+              {filteredStudents.length}
+            </span>{' '}
+            of {allStudents.length} Candidates
+          </div>
+        </div>
       </div>
 
       {/* Filter Tools Bar */}
@@ -330,10 +326,8 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                             setPlacedPackageInput('');
                           }
                         }}
-                        className={`px-5 py-3 rounded-2xl border transition-all cursor-pointer shadow-xs hover:shadow-md hover:scale-102 active:scale-98 font-extrabold text-xs sm:text-sm flex items-center gap-2 ${
-                          student.placementStatus === 'Placed'
-                            ? 'bg-rose-50 hover:bg-rose-600 border-rose-200 text-rose-700 hover:text-white'
-                            : 'bg-emerald-50 hover:bg-emerald-600 border-emerald-200 text-emerald-700 hover:text-white'
+                        className={`btn h-12 px-6 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                          student.placementStatus === 'Placed' ? 'btn-danger' : 'btn-success'
                         }`}
                         title={student.placementStatus === 'Placed' ? 'Mark as Unplaced' : 'Set Placed'}
                       >
@@ -470,10 +464,8 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
                   }
                   setActiveMobileStudent(null);
                 }}
-                className={`btn h-11 w-full rounded-xl text-xs font-bold flex items-center justify-center gap-2 ${
-                  activeMobileStudent.placementStatus === 'Placed'
-                    ? 'btn-danger'
-                    : 'btn-primary'
+                className={`btn h-12 w-full px-6 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                  activeMobileStudent.placementStatus === 'Placed' ? 'btn-danger' : 'btn-success'
                 }`}
               >
                 {activeMobileStudent.placementStatus === 'Placed' ? 'Mark Unplaced' : 'Set Placed'}

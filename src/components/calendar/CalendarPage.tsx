@@ -176,11 +176,11 @@ export default function CalendarPage({
         {/* ADD EVENT BUTTON */}
         <button
           type="button"
-          className="btn btn-primary h-11 px-5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 self-start sm:self-center cursor-pointer shadow-sm"
+          className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 self-start sm:self-center cursor-pointer transition-all"
           onClick={() => setShowEventForm(true)}
         >
           <Plus size={18} />
-          <span>{readOnly ? "Add Off-Campus Event (Private)" : "Create Task / Event"}</span>
+          <span>{readOnly ? "Add Private Event / Task" : "Add Placement Event / Task"}</span>
         </button>
       </div>
 

@@ -17,7 +17,8 @@ import {
   Save,
   Loader2,
   UserCheck,
-  GitBranch
+  GitBranch,
+  Menu
 } from 'lucide-react';
 
 import type {
@@ -302,6 +303,15 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
     setShowReferralForm(true);
   };
 
+  const ALUMNI_TAB_LABELS: Record<AlumniTabType, string> = {
+    dashboard: 'Dashboard',
+    blogs: 'Write Blog',
+    myBlogs: 'My Blogs',
+    referral: 'Offer Referral',
+    directory: 'Alumni Directory',
+    settings: 'Profile Settings'
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-primary">
       {/* Desktop Collapsible Sidebar */}
@@ -325,6 +335,24 @@ export const AlumniPortal: React.FC<AlumniPortalProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        {/* Mobile Top Bar */}
+        <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 h-16 flex items-center justify-between gap-4 shadow-2xs shrink-0">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/90 text-blue-900 font-extrabold text-sm border border-blue-200/80 transition-all cursor-pointer flex items-center gap-2.5 shadow-2xs active:scale-95 shrink-0 min-h-[44px]"
+            aria-label="Open Alumni Navigation Drawer"
+          >
+            <Menu size={22} className="text-blue-600 shrink-0" />
+            <span className="font-display">Menu</span>
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0 text-right">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 font-display truncate">
+              {ALUMNI_TAB_LABELS[activeTab] || activeTab}
+            </span>
+          </div>
+        </div>
+
         {/* Content Container */}
         <main className="sp-workspace">
           {/* DASHBOARD TAB */}

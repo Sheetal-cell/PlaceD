@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import type { Alumni } from '../../api/alumniApi';
 import type { AlumniTabType } from './AlumniSidebar';
-import placedLogo from '../../assets/placed_logo.png';
 
 interface AlumniMobileDrawerProps {
   isOpen: boolean;
@@ -51,54 +50,45 @@ export const AlumniMobileDrawer: React.FC<AlumniMobileDrawerProps> = ({
     : 'AL';
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden flex">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
-      />
+    <>
+      {/* Translucent Backdrop Overlay */}
+      <div className="alp-mobile-overlay md:hidden" onClick={onClose} />
 
-      {/* Drawer Container */}
-      <div className="relative flex-1 max-w-xs w-full bg-white shadow-2xl flex flex-col h-full z-10 animate-slide-right">
-        {/* Drawer Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <img src={placedLogo} alt="PlaceD Logo" className="w-7 h-7 object-contain rounded-md shrink-0" />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-slate-900 text-sm leading-none font-display">
-                PlaceD Alumni
-              </span>
-              <span className="text-[10px] text-blue-600 font-extrabold uppercase tracking-wider mt-0.5">
-                Alumni Portal
-              </span>
-            </div>
-          </div>
-
+      {/* Sliding Mobile Drawer Panel */}
+      <div className="alp-mobile-drawer md:hidden">
+        {/* Drawer Header with Prominent Close Button (✕) */}
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 font-display">Navigation</span>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]"
+            title="Close Drawer (✕)"
+            aria-label="Close Drawer"
           >
-            <X size={20} />
+            <X size={24} className="shrink-0 text-slate-700" />
           </button>
         </div>
 
-        {/* User Card */}
-        <div className="p-4 bg-blue-50/60 border-b border-blue-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+        {/* Alumni Profile Info Pill (Compact & Polished) */}
+        <div className="mx-4 mt-3 mb-1 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs flex items-center gap-3 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs">
             {initials}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-xs font-bold text-slate-900 truncate">
+            <span className="text-xs font-extrabold text-slate-900 font-display truncate">
               {alumni.name}
             </span>
-            <span className="text-[10px] text-blue-600 font-extrabold uppercase tracking-wider truncate">
-              {alumni.currentCompany || alumni.department || 'Alumni'}
+            <span className="text-[11px] text-blue-600 font-extrabold uppercase tracking-wider truncate mt-0.5">
+              {alumni.currentCompany || alumni.department || 'Alumni Member'}
             </span>
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-3 flex-1 overflow-y-auto flex flex-col gap-1">
+        {/* Small Intentional Gap Before Navigation Starts */}
+        <div className="h-2 shrink-0" />
+
+        {/* Navigation Items (Clean list without extra headings) */}
+        <nav className="px-4 py-1 flex-1 overflow-y-auto flex flex-col gap-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -110,33 +100,33 @@ export const AlumniMobileDrawer: React.FC<AlumniMobileDrawerProps> = ({
                   setActiveTab(item.id);
                   onClose();
                 }}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs sm:text-sm font-bold min-h-[46px] transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-extrabold'
                     : 'text-slate-600 hover:bg-blue-50/80 hover:text-blue-700'
                 }`}
               >
-                <Icon size={18} />
-                <span>{item.label}</span>
+                <Icon size={18} className="shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             );
           })}
         </nav>
 
         {/* Footer Logout */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 shrink-0">
           <button
             onClick={() => {
               onClose();
               onLogout();
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs transition-colors cursor-pointer"
           >
             <LogOut size={16} />
             <span>Sign Out</span>
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };

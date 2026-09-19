@@ -92,10 +92,8 @@ export const AdminDrivesView: React.FC<AdminDrivesViewProps> = ({
 
         <button
           onClick={() => setShowDriveForm(!showDriveForm)}
-          className={`h-11 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all self-start sm:self-center cursor-pointer ${
-            showDriveForm
-              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          className={`btn h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all self-start sm:self-center ${
+            showDriveForm ? 'btn-secondary' : 'btn-primary'
           }`}
         >
           {showDriveForm ? <X size={18} /> : <Plus size={18} />}
@@ -336,18 +334,17 @@ export const AdminDrivesView: React.FC<AdminDrivesViewProps> = ({
             </div>
           </div>
 
-          {/* Form Action Controls */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setShowDriveForm(false)}
-              className="btn btn-secondary h-11 px-5 rounded-xl text-sm font-bold"
+              className="btn btn-secondary h-12 px-6 rounded-xl font-bold text-sm cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn btn-primary h-11 px-6 rounded-xl text-sm font-bold flex items-center gap-2"
+              className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
               <CheckCircle2 size={18} /> Launch Drive Campaign
             </button>
@@ -433,10 +430,8 @@ export const AdminDrivesView: React.FC<AdminDrivesViewProps> = ({
             <div className="self-stretch lg:self-center shrink-0 flex items-center justify-end">
               <button
                 onClick={() => handleToggleDriveStatus(drive)}
-                className={`h-11 px-6 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  drive.status === 'OPEN'
-                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/90 shadow-2xs'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                className={`btn h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                  drive.status === 'OPEN' ? 'btn-danger' : 'btn-success'
                 }`}
               >
                 {drive.status === 'OPEN' ? 'Suspend Drive' : 'Reactivate'}

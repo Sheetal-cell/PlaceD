@@ -6,12 +6,12 @@ import {
   Sparkles,
   MessageSquare,
   TrendingUp,
+  Users,
   User,
   X
 } from 'lucide-react';
 import type { Student } from '../../mockData';
 import type { StudentTabType } from './StudentSidebar';
-import placedLogo from '../../assets/placed_logo.png';
 
 interface StudentMobileDrawerProps {
   isOpen: boolean;
@@ -30,14 +30,30 @@ export const StudentMobileDrawer: React.FC<StudentMobileDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const navItems = [
-    { id: 'dashboard' as StudentTabType, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'drives' as StudentTabType, label: 'Placement Drives', icon: Briefcase },
-    { id: 'calendar' as StudentTabType, label: 'Placement Calendar', icon: CalendarIcon },
-    { id: 'ats' as StudentTabType, label: 'ATS Resume Scorer', icon: Sparkles },
-    { id: 'interview' as StudentTabType, label: 'Mock Interview Simulator', icon: MessageSquare },
-    { id: 'visualizer' as StudentTabType, label: 'Recruitment Pipeline', icon: TrendingUp },
-    { id: 'profile' as StudentTabType, label: 'Profile Settings', icon: User }
+  const navSections = [
+    {
+      title: 'Main Menu',
+      items: [
+        { id: 'dashboard' as StudentTabType, label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'drives' as StudentTabType, label: 'Placement Drives', icon: Briefcase },
+        { id: 'calendar' as StudentTabType, label: 'Placement Calendar', icon: CalendarIcon },
+      ],
+    },
+    {
+      title: 'AI & Analytics',
+      items: [
+        { id: 'ats' as StudentTabType, label: 'ATS Resume Scorer', icon: Sparkles },
+        { id: 'interview' as StudentTabType, label: 'Mock Interview', icon: MessageSquare },
+        { id: 'visualizer' as StudentTabType, label: 'Stage Visualizer', icon: TrendingUp },
+      ],
+    },
+    {
+      title: 'Account',
+      items: [
+        { id: 'alumni' as StudentTabType, label: 'Alumni Network', icon: Users },
+        { id: 'profile' as StudentTabType, label: 'My Profile', icon: User },
+      ],
+    },
   ];
 
   return (
@@ -47,52 +63,45 @@ export const StudentMobileDrawer: React.FC<StudentMobileDrawerProps> = ({
 
       {/* Sliding Mobile Drawer Panel */}
       <div className="sp-drawer-panel md:hidden">
-        {/* Header with PlaceD Brand & Always Visible Close Button (✕) */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white text-white flex items-center justify-center border border-slate-200 shrink-0 p-1">
-              <img src={placedLogo} alt="PlaceD Logo" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-slate-900 text-base font-display leading-tight tracking-tight">PlaceD</h3>
-              <p className="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-0.5">Student Portal</p>
-            </div>
-          </div>
-
+        {/* Top Header with Prominent Close Button (✕) */}
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 font-display">Navigation</span>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer border border-transparent hover:border-slate-200"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center shrink-0 min-w-[40px] min-h-[40px]"
             title="Close Drawer (✕)"
             aria-label="Close Drawer"
           >
-            <X size={20} />
+            <X size={24} className="shrink-0 text-slate-700" />
           </button>
         </div>
 
-        {/* Student Profile Info Pill inside Drawer */}
-        <div className="mx-4 my-3.5 p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 via-blue-50/40 to-slate-50 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm">
-            {currentStudent.name.charAt(0)}
+        {/* Student Profile Info Pill inside Drawer (Compact & Polished) */}
+        <div className="mx-4 mt-3 mb-1 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs flex items-center gap-3 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+            {currentStudent.name ? currentStudent.name.charAt(0).toUpperCase() : 'S'}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center justify-between gap-1">
-              <span className="text-xs font-bold text-slate-900 font-display truncate" title={currentStudent.name}>
+              <span className="text-xs font-extrabold text-slate-900 font-display truncate" title={currentStudent.name}>
                 {currentStudent.name}
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 text-[10px] font-bold shrink-0">
+              <span className="px-1.5 py-0.5 rounded bg-emerald-100/90 text-emerald-800 text-[10px] font-extrabold shrink-0">
                 Active
               </span>
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold truncate mt-0.5">
+            <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
               {currentStudent.department} • {currentStudent.cgpa} CGPA
             </span>
           </div>
         </div>
 
-        {/* Navigation List */}
-        <nav className="flex-1 px-3.5 py-2 flex flex-col gap-1.5 overflow-y-auto min-h-0">
-          <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Navigation Menu</span>
-          {navItems.map((item) => {
+        {/* Small Intentional Gap Before Navigation Starts */}
+        <div className="h-2 shrink-0" />
+
+        {/* Navigation List (Clean list without extra section titles) */}
+        <nav className="flex-1 px-4 py-1 flex flex-col gap-1.5 overflow-y-auto min-h-0">
+          {navSections.flatMap(s => s.items).map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
@@ -103,20 +112,20 @@ export const StudentMobileDrawer: React.FC<StudentMobileDrawerProps> = ({
                   setActiveTab(item.id);
                   onClose();
                 }}
-                className={`group flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all cursor-pointer text-xs ${
+                className={`group flex items-center gap-3.5 px-3.5 py-3 rounded-xl transition-all cursor-pointer text-xs sm:text-sm min-h-[46px] ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-extrabold shadow-2xs'
                     : 'text-slate-600 font-bold hover:bg-slate-100/80 hover:text-slate-900 border border-transparent'
                 }`}
               >
                 <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-2xs'
                       : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700'
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={17} />
                 </div>
                 <span className="truncate">{item.label}</span>
               </button>

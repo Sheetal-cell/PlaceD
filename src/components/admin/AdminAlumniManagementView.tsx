@@ -202,7 +202,7 @@ export const AdminAlumniManagementView: React.FC<
                 <div className="flex items-center gap-3 shrink-0 justify-end">
                   <button
                     onClick={() => onApproveRecruiter && onApproveRecruiter(rec.id)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer"
+                    className="btn btn-success h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <CheckCircle2 size={16} />
                     Approve Recruiter
@@ -312,7 +312,7 @@ export const AdminAlumniManagementView: React.FC<
                 <div className="flex items-center gap-3 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-200/60 justify-end">
                   <button
                     onClick={() => onApprove(item.id)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer"
+                    className="btn btn-success h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <CheckCircle2 size={16} />
                     Approve
@@ -328,7 +328,7 @@ export const AdminAlumniManagementView: React.FC<
                         onReject(item.id);
                       }
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-extrabold transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
+                    className="btn btn-danger h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <XCircle size={16} />
                     Reject
