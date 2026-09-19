@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   MessageSquare,
   Send,
@@ -14,12 +14,40 @@ import {
   XCircle,
   BookOpen,
 } from 'lucide-react';
-import type { Student } from '../../mockData';
+import type { Student, PlacementDrive } from '../../mockData';
 import {
   aiMockInterviewApi,
   type AnswerFeedback,
   type SubmitAnswerResponse,
 } from '../../api/aiMockInterviewApi';
+
+const ALLOWED_ROLES = [
+  'Software Engineer',
+  'Backend Developer',
+  'Frontend Developer',
+  'Full Stack Developer',
+  'Data Analyst',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'AI Engineer',
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'Cybersecurity Analyst',
+  'QA Engineer',
+  'SDET',
+  'Business Analyst',
+];
+
+const ALLOWED_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+
+const DEFAULT_COMPANIES = [
+  'Google',
+  'Microsoft',
+  'Amazon',
+  'NVIDIA',
+  'Deloitte',
+  'Tesla',
+];
 
 interface CompletedRound {
   questionNumber: number;
@@ -31,8 +59,9 @@ interface CompletedRound {
 
 interface StudentInterviewViewProps {
   currentStudent?: Student;
-  interviewRole: 'Software Engineer' | 'Analyst' | null;
-  setInterviewRole: (role: 'Software Engineer' | 'Analyst' | null) => void;
+  drives?: PlacementDrive[];
+  interviewRole: string | null;
+  setInterviewRole: (role: string | null) => void;
   interviewQuestions: any[];
   setInterviewQuestions: React.Dispatch<React.SetStateAction<any[]>>;
   currentQuestionIndex: number;
@@ -49,6 +78,7 @@ interface StudentInterviewViewProps {
 
 export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
   currentStudent,
+  drives,
   interviewRole,
   setInterviewRole,
   setInterviewQuestions,
@@ -65,11 +95,15 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
   const [overallScore, setOverallScore] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState<boolean>(false);
+  const [activeCompanyName, setActiveCompanyName] = useState<string>('Google');
 
   // Completed rounds history for clean stage rendering
   const [completedRounds, setCompletedRounds] = useState<CompletedRound[]>([]);
 
   // Setup form inputs
+  const [targetRole, setTargetRole] = useState<string>('Software Engineer');
+  const [selectedCompanyOption, setSelectedCompanyOption] = useState<string>('Google');
+  const [customCompanyName, setCustomCompanyName] = useState<string>('');
   const [experienceLevel, setExperienceLevel] = useState<string>('Beginner');
   const [skillsInput, setSkillsInput] = useState<string>(
     currentStudent?.skills ? currentStudent.skills.join(', ') : 'React, Node.js, TypeScript'
@@ -79,6 +113,22 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Derive available company options from drives, student applications, defaults, and add 'Other'
+  const companyOptions = useMemo(() => {
+    const driveCompanies = drives ? drives.map((d) => d.companyName).filter(Boolean) : [];
+    const studentCompanies = currentStudent?.applications
+      ? currentStudent.applications.map((a) => a.companyName).filter(Boolean)
+      : [];
+    const existing = Array.from(
+      new Set([...DEFAULT_COMPANIES, ...driveCompanies, ...studentCompanies])
+    );
+    return [...existing.filter((c) => c !== 'Other'), 'Other'];
+  }, [drives, currentStudent]);
+
+  // Compute effective company name to send to backend
+  const effectiveCompanyName =
+    selectedCompanyOption === 'Other' ? customCompanyName.trim() : selectedCompanyOption;
+
   // Sync profile skills if student prop updates
   useEffect(() => {
     if (currentStudent?.skills && currentStudent.skills.length > 0) {
@@ -87,7 +137,12 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
   }, [currentStudent]);
 
   // Start Interview via PlaceD AI FastAPI backend
-  const handleStartInterview = async (role: 'Software Engineer' | 'Analyst') => {
+  const handleStartInterview = async () => {
+    if (!targetRole.trim() || !effectiveCompanyName || !experienceLevel.trim()) {
+      setApiError('Please select or enter a valid target company name.');
+      return;
+    }
+
     setApiError(null);
     setIsLoading(true);
 
@@ -98,14 +153,16 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
 
     try {
       const response = await aiMockInterviewApi.startInterview({
-        role,
+        role: targetRole,
+        company_name: effectiveCompanyName,
         student_name: currentStudent?.name,
         skills: parsedSkills,
         experience_level: experienceLevel,
       });
 
       setSessionId(response.session_id);
-      setInterviewRole(role);
+      setActiveCompanyName(effectiveCompanyName);
+      setInterviewRole(response.role || targetRole);
       setTotalQuestions(response.total_questions);
       setQuestionNumber(response.question_number);
       setCurrentQuestion(response.question);
@@ -238,111 +295,127 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
       )}
 
       {!interviewRole ? (
-        /* Setup & Track Choice View */
-        <div className="flex flex-col gap-6">
-          {/* Interview Setup Card */}
-          <div className="sp-card flex flex-col gap-5 p-6 sm:p-7">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Sparkles size={18} className="text-blue-600" />
-              Interview Session Parameters
+        /* Single Interview Setup Card */
+        <div className="sp-card flex flex-col gap-6 p-6 sm:p-8">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2.5">
+              <Sparkles size={20} className="text-blue-600" />
+              Mock Interview Configuration
             </h3>
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              Select your target role, company, experience level, and technical skills for the AI interviewer.
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Experience Level Selector */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-700">Experience Level</label>
-                <select
-                  value={experienceLevel}
-                  onChange={(e) => setExperienceLevel(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="Beginner">Beginner (Entry Level / Fresh Grad)</option>
-                  <option value="Intermediate">Intermediate (1-3 Years)</option>
-                  <option value="Advanced">Advanced (Senior / Specialist)</option>
-                </select>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Student Name */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-slate-700">Student Name</label>
+              <input
+                type="text"
+                readOnly
+                value={currentStudent?.name || 'Student Candidate'}
+                className="input-field bg-slate-50 text-slate-600 font-medium cursor-not-allowed"
+              />
+            </div>
 
-              {/* Skills Input */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-700">
-                  Technical Skills (Comma separated)
-                </label>
+            {/* Company Name Dropdown */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-slate-700">Target Company *</label>
+              <select
+                value={selectedCompanyOption}
+                onChange={(e) => {
+                  setSelectedCompanyOption(e.target.value);
+                  if (e.target.value !== 'Other') {
+                    setCustomCompanyName('');
+                  }
+                }}
+                className="input-field"
+              >
+                {companyOptions.map((comp) => (
+                  <option key={comp} value={comp}>
+                    {comp}
+                  </option>
+                ))}
+              </select>
+
+              {selectedCompanyOption === 'Other' && (
                 <input
                   type="text"
-                  value={skillsInput}
-                  onChange={(e) => setSkillsInput(e.target.value)}
-                  placeholder="e.g. React, Node.js, Python, SQL"
-                  className="input-field"
+                  value={customCompanyName}
+                  onChange={(e) => setCustomCompanyName(e.target.value)}
+                  placeholder="Enter custom company name (e.g. Meta, Apple, Netflix)"
+                  className="input-field mt-1 animate-fade-in focus:ring-2 focus:ring-blue-100"
                 />
-              </div>
+              )}
+            </div>
+
+            {/* Target Role Dropdown */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-slate-700">Target Role *</label>
+              <select
+                value={targetRole}
+                onChange={(e) => setTargetRole(e.target.value)}
+                className="input-field"
+              >
+                {ALLOWED_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Experience Level Dropdown */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-slate-700">Experience Level *</label>
+              <select
+                value={experienceLevel}
+                onChange={(e) => setExperienceLevel(e.target.value)}
+                className="input-field"
+              >
+                {ALLOWED_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Technical Skills Input */}
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <label className="text-sm font-bold text-slate-700">
+                Technical Skills (Comma separated)
+              </label>
+              <input
+                type="text"
+                value={skillsInput}
+                onChange={(e) => setSkillsInput(e.target.value)}
+                placeholder="e.g. React, Node.js, Python, SQL"
+                className="input-field"
+              />
             </div>
           </div>
 
-          {/* Track Choice Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Software Engineer Track */}
-            <div className="glass-card p-6 sm:p-8 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-blue-300 transition-all flex flex-col justify-between gap-6">
-              <div className="flex flex-col gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold border border-blue-100 shadow-2xs">
-                  <Sparkles size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 font-display">Software Engineer Track</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed mt-2 font-medium">
-                    Evaluates system architecture, data structures, backend APIs, web frameworks, and programming logic.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={() => handleStartInterview('Software Engineer')}
-                className="btn btn-primary h-12 w-full rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Connecting to PlaceD AI...</span>
-                  </>
-                ) : (
-                  <>
-                    Start Software Engineering Mock <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Technology Analyst Track */}
-            <div className="glass-card p-6 sm:p-8 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between gap-6">
-              <div className="flex flex-col gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold border border-indigo-100 shadow-2xs">
-                  <Award size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 font-display">Technology Analyst Track</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed mt-2 font-medium">
-                    Evaluates dataset analysis, business metric calculations, stakeholder communication, and problem analysis.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={() => handleStartInterview('Analyst')}
-                className="btn btn-primary h-12 w-full rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 border-indigo-600 cursor-pointer disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Connecting to PlaceD AI...</span>
-                  </>
-                ) : (
-                  <>
-                    Start Technology Analyst Mock <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="pt-2">
+            <button
+              type="button"
+              disabled={isLoading || !effectiveCompanyName || !targetRole.trim() || !experienceLevel.trim()}
+              onClick={handleStartInterview}
+              className="btn btn-primary h-12 w-full sm:w-auto px-8 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Connecting to PlaceD AI...</span>
+                </>
+              ) : (
+                <>
+                  <span>Start Mock Interview</span>
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
           </div>
         </div>
       ) : (
@@ -358,7 +431,7 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 font-display">Interviewer AI</h2>
                   <p className="text-xs text-slate-500 font-medium">
-                    Role Track: <span className="font-bold text-slate-700">{interviewRole}</span> ({experienceLevel})
+                    Role Track: <span className="font-bold text-slate-700">{interviewRole}</span> ({experienceLevel}) | Company: <span className="font-bold text-slate-700">{activeCompanyName}</span>
                   </p>
                 </div>
               </div>
@@ -570,7 +643,7 @@ export const StudentInterviewView: React.FC<StudentInterviewViewProps> = ({
                 </h3>
                 <p className="text-sm text-emerald-800 max-w-md font-medium">
                   You have completed all {totalQuestions} technical questions for the{' '}
-                  <strong>{interviewRole}</strong> track.
+                  <strong>{interviewRole}</strong> track at <strong>{activeCompanyName}</strong>.
                 </p>
                 {overallScore !== null && (
                   <div className="mt-2">

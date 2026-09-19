@@ -179,9 +179,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   /*
    * Mock Interview State
    */
-  const [interviewRole, setInterviewRole] = useState<
-    'Software Engineer' | 'Analyst' | null
-  >(null);
+  const [interviewRole, setInterviewRole] = useState<string | null>(null);
 
   const [interviewQuestions, setInterviewQuestions] = useState<any[]>(
     []
@@ -425,6 +423,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             {activeTab === 'interview' && (
               <StudentInterviewView
                 currentStudent={currentStudent}
+                drives={drives}
                 interviewRole={interviewRole}
                 setInterviewRole={setInterviewRole}
                 interviewQuestions={interviewQuestions}

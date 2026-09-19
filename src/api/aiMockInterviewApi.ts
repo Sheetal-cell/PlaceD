@@ -3,9 +3,10 @@ const AI_BASE_URL =
 
 export interface StartInterviewRequest {
   role: string;
+  company_name: string;
   student_name?: string;
   skills?: string[];
-  experience_level?: string;
+  experience_level: string;
 }
 
 export interface StartInterviewResponse {
@@ -95,6 +96,7 @@ export const aiMockInterviewApi = {
       method: "POST",
       body: JSON.stringify({
         role: data.role,
+        company_name: data.company_name,
         student_name: data.student_name || undefined,
         skills: data.skills || [],
         experience_level: data.experience_level || "Beginner",
