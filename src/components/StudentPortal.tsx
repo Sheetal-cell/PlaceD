@@ -32,7 +32,7 @@ interface StudentPortalProps {
   alumni: Alumni[];
 
   onLogout: () => void;
-  onApply: (driveId: string) => void;
+  onApply: (driveId: string) => Promise<void> | void;
   onUpdateResumeScore: (score: number, resumeText: string) => void;
   onUpdateStudentProfile: (updatedStudent: Student) => void;
 }

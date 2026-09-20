@@ -3,7 +3,6 @@ import {
   X,
   LayoutDashboard,
   Briefcase,
-  Globe,
   Calendar as CalendarIcon,
   Users,
   GitMerge,
@@ -32,7 +31,6 @@ export const AdminMobileDrawer: React.FC<AdminMobileDrawerProps> = ({
   const navItems = [
     { id: 'dashboard' as AdminTabType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'drives' as AdminTabType, label: 'Placement Drives', icon: Briefcase },
-    { id: 'scraped' as AdminTabType, label: 'Scraped Jobs', icon: Globe },
     { id: 'calendar' as AdminTabType, label: 'Calendar', icon: CalendarIcon },
     { id: 'students' as AdminTabType, label: 'Student Database', icon: Users },
     { id: 'recruiters' as AdminTabType, label: 'Recruiter Management', icon: Users },

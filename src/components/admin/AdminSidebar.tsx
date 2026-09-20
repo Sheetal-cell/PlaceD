@@ -4,7 +4,6 @@ import {
   X,
   LayoutDashboard,
   Briefcase,
-  Globe,
   Calendar as CalendarIcon,
   Users,
   GitMerge,
@@ -44,7 +43,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const navItems = [
     { id: 'dashboard' as AdminTabType, label: 'Analytics Dashboard', icon: LayoutDashboard },
     { id: 'drives' as AdminTabType, label: 'Recruitment Drives', icon: Briefcase },
-    { id: 'scraped' as AdminTabType, label: 'Recruitment Feed', icon: Globe },
     { id: 'calendar' as AdminTabType, label: 'Placement Calendar', icon: CalendarIcon },
     { id: 'students' as AdminTabType, label: 'Student Database', icon: Users },
     {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitMerge, ArrowRight, X, Briefcase, FileText, Mail, Sparkles, CheckCircle2, Users, Award, GraduationCap, Clock, Download  } from 'lucide-react';
+import { GitMerge, ArrowRight, X, Briefcase, FileText, Mail, Sparkles, CheckCircle2, Users, Award, GraduationCap, Clock } from 'lucide-react';
 import type { Student, PlacementDrive, Recruiter } from '../../mockData';
 import '../admin/RecordPlacementOfferModal.css';
 
@@ -56,10 +56,11 @@ export const RecruiterTrackerView: React.FC<RecruiterTrackerViewProps> = ({
     <button
       type="button"
       onClick={onDownloadStudents}
-      className="h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs inline-flex items-center justify-center gap-2 border border-slate-200 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+      disabled={activeTrackerApplications.length === 0}
+      className="btn btn-primary h-12 px-7 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       title="Download students for this drive"
     >
-      <Download size={16} />
+      <FileText size={18} />
       Download Students
     </button>
 

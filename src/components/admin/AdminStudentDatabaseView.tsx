@@ -5,6 +5,7 @@ import type { StudentWithPlacement } from '../../api/types';
 import { StudentVisualizerView } from '../student/StudentVisualizerView';
 import { RecordPlacementOfferModal } from './RecordPlacementOfferModal';
 import { applicationApi } from '../../api/applicationApi';
+import { isOnCampusDrive } from '../../utils/driveFilters';
 import './RecordPlacementOfferModal.css';
 
 interface AdminStudentDatabaseViewProps {
@@ -91,15 +92,17 @@ export const AdminStudentDatabaseView: React.FC<AdminStudentDatabaseViewProps> =
   const [selectedStudentForVisualizer, setSelectedStudentForVisualizer] = useState<(Student | StudentWithPlacement) | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string>('');
   const [fetchedApplications, setFetchedApplications] = useState<any[]>([]);
-
   useEffect(() => {
     if (selectedStudentForVisualizer?.id) {
       applicationApi
         .getAll()
         .then((allApps) => {
-          const sApps = allApps.filter(
-            (a) => String(a.studentId) === String(selectedStudentForVisualizer.id)
-          );
+          const sApps = allApps.filter((a) => {
+            if (String(a.studentId) !== String(selectedStudentForVisualizer.id)) return false;
+            const matchedDrive = drives.find((d) => String(d.id) === String(a.jobPostingId));
+            if (matchedDrive && !isOnCampusDrive(matchedDrive)) return false;
+            return true;
+          });
           if (sApps.length > 0) {
             const mapped = sApps.map((app) => {
               const matchedDrive = drives.find(

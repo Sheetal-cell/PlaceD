@@ -19,6 +19,7 @@ import { AdminDashboardView } from './admin/AdminDashboardView';
 import { AdminDrivesView } from './admin/AdminDrivesView';
 import { AdminStudentDatabaseView } from './admin/AdminStudentDatabaseView';
 import { AdminLiveTrackerView } from './admin/AdminLiveTrackerView';
+import { isOnCampusDrive } from '../utils/driveFilters';
 
 interface AdminPortalProps {
   students: Student[];
@@ -116,7 +117,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
 
 
-  // Real Drives API & State
+// Real Drives API & State
   const [realDrives, setRealDrives] = useState<DriveWithCompany[] | null>(null);
   useEffect(() => {
   jobPostingApi
@@ -133,7 +134,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     });
 }, []);
 
-  const effectiveDrives: (DriveWithCompany | PlacementDrive)[] = realDrives ?? drives;
+  const rawEffectiveDrives: (DriveWithCompany | PlacementDrive)[] = realDrives ?? drives;
+  const effectiveDrives: (DriveWithCompany | PlacementDrive)[] = useMemo(() => {
+    return rawEffectiveDrives.filter(isOnCampusDrive);
+  }, [rawEffectiveDrives]);
 
   // Roster Filter State
   const [studentSearch, setStudentSearch] = useState('');

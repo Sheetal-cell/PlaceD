@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { jobPostingApi } from '../../api/jobPostingApi';
 import type { JobPostingResponse } from '../../api/types';
+import { isOffCampusDrive, isActiveDrive } from '../../utils/driveFilters';
 
 interface StudentOffCampusViewProps {
   onApply?: (driveId: string) => void;
@@ -38,6 +39,7 @@ const cleanString = (val?: string | number | null, fallback = 'Not specified'): 
 };
 
 export const StudentOffCampusView: React.FC<StudentOffCampusViewProps> = ({
+  onApply,
   selectedRecruitmentType = 'OFF_CAMPUS',
   onRecruitmentTypeChange
 }) => {
@@ -57,17 +59,7 @@ export const StudentOffCampusView: React.FC<StudentOffCampusViewProps> = ({
 
     try {
       const allPostings = await jobPostingApi.getAll();
-      console.log('[OffCampus] API raw response received:', allPostings?.length ?? 0, 'postings');
-
-      // Authoritative classification for OFF_CAMPUS jobs
-      const isOffCampusJob = (job: JobPostingResponse) => {
-        return (
-          job.recruitmentType === 'OFF_CAMPUS' ||
-          job.sourceType === 'SCRAPER'
-        );
-      };
-
-      const offCampusOnly = (allPostings || []).filter(isOffCampusJob);
+      const offCampusOnly = (allPostings || []).filter((job) => isOffCampusDrive(job) && isActiveDrive(job));
 
       console.log('[OffCampus] OFF_CAMPUS jobs count:', offCampusOnly.length);
       setJobs(offCampusOnly);
@@ -495,11 +487,24 @@ export const StudentOffCampusView: React.FC<StudentOffCampusViewProps> = ({
                       href={validApplyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        if (onApply) {
+                          onApply(String(job.id));
+                        }
+                      }}
                       className="btn btn-primary h-11 w-full rounded-xl text-xs font-extrabold shadow-md flex items-center justify-center gap-2 cursor-pointer no-underline text-white"
                     >
                       <span>Apply Now ↗</span>
                       <ExternalLink size={16} />
                     </a>
+                  ) : onApply ? (
+                    <button
+                      type="button"
+                      onClick={() => onApply(String(job.id))}
+                      className="btn btn-primary h-11 w-full rounded-xl text-xs font-extrabold shadow-md flex items-center justify-center gap-2 cursor-pointer text-white"
+                    >
+                      <span>Apply Now</span>
+                    </button>
                   ) : (
                     <button
                       type="button"

@@ -1,4 +1,5 @@
 export interface Application {
+  id?: string;
   jobPostingId: string;
   driveId: string;
   companyName: string;

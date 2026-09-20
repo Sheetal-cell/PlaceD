@@ -277,6 +277,8 @@ export interface CalendarEvent {
   status?: string;
   branches?: string[];
   isPrivate?: boolean;
+  recruitmentType?: string;
+  sourceType?: string;
 }
 
 export interface StudentRoundVisualizerResponse {

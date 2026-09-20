@@ -468,7 +468,7 @@ function AppContent() {
           status: d.status,
           registeredCount: d.registeredCount,
           rounds: d.recruitmentType === 'OFF_CAMPUS' ? [] : ['Online Assessment', 'Technical Interview', 'HR Interview'],
-          recruitmentType: d.recruitmentType === 'CAMPUS' ? 'CAMPUS' : d.recruitmentType,
+          recruitmentType: d.recruitmentType,
           sourceType: d.sourceType,
           applyUrl: d.applyUrl,
           source: d.source,
@@ -758,7 +758,7 @@ function AppContent() {
      STUDENT APPLY TO DRIVE
   ======================================================= */
 
-  const handleApplyDrive = (
+  const handleApplyDrive = async (
     driveId: string
   ) => {
     if (
@@ -766,115 +766,132 @@ function AppContent() {
       session.role !== 'student' ||
       !session.studentId
     ) {
+      triggerToast('Please log in as a student to apply.', 'warning');
       return;
     }
 
-    const student =
-      students.find(
-        (item) =>
-          item.id === session.studentId
-      );
+    const sId = session.studentId.toLowerCase().trim();
+    const student = students.find(
+      (item) =>
+        String(item.id).toLowerCase().trim() === sId ||
+        (item.email && item.email.toLowerCase().trim() === sId) ||
+        (item.registrationNumber && String(item.registrationNumber).toLowerCase().trim() === sId)
+    );
 
-    const drive =
-      drives.find(
-        (item) => item.id === driveId
-      );
+    const drive = drives.find(
+      (item) => String(item.id) === String(driveId)
+    );
 
-    if (!student || !drive) {
+    if (!student) {
+      triggerToast('Student profile not found.', 'error');
       return;
     }
 
+    if (!drive) {
+      triggerToast('Placement drive not found.', 'error');
+      return;
+    }
+
+    if (drive.status === 'CLOSED' || drive.active === false) {
+      triggerToast('This drive is not currently accepting applications.', 'warning');
+      return;
+    }
 
     /*
      * Prevent duplicate applications.
      */
-
     if (
       student.applications.some(
         (application) =>
-          application.driveId === driveId
+          String(application.driveId) === String(driveId) ||
+          String(application.jobPostingId) === String(driveId)
       )
     ) {
       triggerToast(
         'You have already submitted an application for this drive.',
         'warning'
       );
-
       return;
     }
 
+    const rawStudentId = student.registrationNumber || student.id;
+    const formattedStudentId =
+      rawStudentId.length === 12
+        ? rawStudentId
+        : rawStudentId.replace(/\D/g, '').padStart(12, '0').slice(-12);
 
-    const newApplication: Application = {
-      driveId: drive.id,
-      jobPostingId: drive.id,
-      companyName: drive.companyName,
-      role: drive.title,
-      appliedDate:
-        new Date()
-          .toISOString()
-          .split('T')[0],
-      status: 'Applied',
-      currentRoundIndex: 0,
-    };
-
-    const numericStudentId = student.id.length === 12 ? student.id : (student.id.replace(/\D/g, '').padStart(12, '0')).slice(-12);
     const jobPostingIdNum = parseInt(drive.id, 10);
-    if (!isNaN(jobPostingIdNum)) {
-      applicationApi.create({
-        studentId: numericStudentId,
-        jobPostingId: jobPostingIdNum
-      }).catch((err) => console.warn('Backend application create warning:', err));
+    if (isNaN(jobPostingIdNum)) {
+      triggerToast('Invalid job posting ID format.', 'error');
+      return;
     }
 
+    try {
+      const responseDTO = await applicationApi.create({
+        studentId: formattedStudentId,
+        jobPostingId: jobPostingIdNum
+      });
 
-    setStudents(
-      (previousStudents) =>
-        previousStudents.map(
-          (studentItem) => {
-            if (
-              studentItem.id ===
-              session.studentId
-            ) {
-              return {
-                ...studentItem,
-                applications: [
-                  newApplication,
-                  ...studentItem.applications,
-                ],
-              };
-            }
+      const newApplication: Application = {
+        id: responseDTO.id ? String(responseDTO.id) : undefined,
+        driveId: String(responseDTO.jobPostingId || drive.id),
+        jobPostingId: String(responseDTO.jobPostingId || drive.id),
+        companyName: responseDTO.companyName || drive.companyName,
+        role: responseDTO.jobTitle || drive.title,
+        appliedDate:
+          responseDTO.appliedDate ||
+          new Date().toISOString().split('T')[0],
+        status:
+          responseDTO.status === 'SHORTLISTED'
+            ? 'Selected'
+            : responseDTO.status === 'REJECTED'
+            ? 'Rejected'
+            : 'Applied',
+        currentRoundIndex: 0,
+      };
 
-            return studentItem;
+      setStudents((previousStudents) =>
+        previousStudents.map((studentItem) => {
+          if (
+            String(studentItem.id).toLowerCase().trim() === sId ||
+            (studentItem.email && studentItem.email.toLowerCase().trim() === sId) ||
+            (studentItem.registrationNumber && String(studentItem.registrationNumber).toLowerCase().trim() === sId)
+          ) {
+            return {
+              ...studentItem,
+              applications: [
+                newApplication,
+                ...studentItem.applications,
+              ],
+            };
           }
-        )
-    );
+          return studentItem;
+        })
+      );
 
-
-    setDrives(
-      (previousDrives) =>
-        previousDrives.map(
-          (driveItem) => {
-            if (
-              driveItem.id === driveId
-            ) {
-              return {
-                ...driveItem,
-                registeredCount:
-                  (driveItem.registeredCount ||
-                    0) + 1,
-              };
-            }
-
-            return driveItem;
+      setDrives((previousDrives) =>
+        previousDrives.map((driveItem) => {
+          if (String(driveItem.id) === String(driveId)) {
+            return {
+              ...driveItem,
+              registeredCount: (driveItem.registeredCount || 0) + 1,
+            };
           }
-        )
-    );
+          return driveItem;
+        })
+      );
 
-
-    triggerToast(
-      `Application submitted successfully for ${drive.companyName}!`,
-      'success'
-    );
+      triggerToast(
+        `Application submitted successfully for ${drive.companyName}!`,
+        'success'
+      );
+    } catch (err: any) {
+      console.error('Backend application create error:', err);
+      triggerToast(
+        err?.message || 'Failed to submit application. Please try again.',
+        'error'
+      );
+    }
   };
 
 

@@ -2,14 +2,15 @@ import React, {
   useMemo,
   useState
 } from 'react';
-import { Briefcase, AlertCircle, Lock, Award, CheckCircle2, Globe } from 'lucide-react';
+import { Briefcase, AlertCircle, Lock, Award, CheckCircle2, Globe, Loader2 } from 'lucide-react';
 import type { Student, PlacementDrive } from '../../mockData';
 import { StudentOffCampusView } from './StudentOffCampusView';
+import { isOnCampusDrive, isOffCampusDrive, isActiveDrive } from '../../utils/driveFilters';
 
 interface StudentDrivesViewProps {
   currentStudent: Student;
   drives: PlacementDrive[];
-  onApply: (driveId: string) => void;
+  onApply: (driveId: string) => Promise<void> | void;
 }
 
 export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
@@ -18,6 +19,7 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
   onApply
 }) => {
   const isPlaced = currentStudent.placementStatus === 'Placed';
+  const [applyingDriveId, setApplyingDriveId] = useState<string | null>(null);
 
   const [
     selectedRecruitmentType,
@@ -31,25 +33,12 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
     setSelectedRole
   ] = useState('ALL');
 
-  const normalizedRecruitmentType = (
-    type:
-      | 'CAMPUS'
-      | 'ON_CAMPUS'
-      | 'OFF_CAMPUS'
-  ) => {
-    return type === 'CAMPUS'
-      ? 'ON_CAMPUS'
-      : type;
-  };
-
   const availableRoles = useMemo(() => {
-
     const roles = drives
-      .filter(
-        (drive) =>
-          normalizedRecruitmentType(
-            drive.recruitmentType
-          ) === selectedRecruitmentType
+      .filter((drive) =>
+        (selectedRecruitmentType === 'ON_CAMPUS'
+          ? isOnCampusDrive(drive)
+          : isOffCampusDrive(drive)) && isActiveDrive(drive)
       )
       .map(
         (drive) =>
@@ -65,24 +54,19 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
         new Set(roles)
       ).sort()
     ];
-
   }, [
     drives,
     selectedRecruitmentType
   ]);
 
   const filteredDrives = useMemo(() => {
-
     return drives.filter((drive) => {
-
-      const type =
-        normalizedRecruitmentType(
-          drive.recruitmentType
-        );
-
       const matchesType =
-        type ===
-        selectedRecruitmentType;
+        selectedRecruitmentType === 'ON_CAMPUS'
+          ? isOnCampusDrive(drive)
+          : isOffCampusDrive(drive);
+
+      const matchesStatus = isActiveDrive(drive);
 
       const role =
         drive.roleCategory ||
@@ -95,10 +79,10 @@ export const StudentDrivesView: React.FC<StudentDrivesViewProps> = ({
 
       return (
         matchesType &&
+        matchesStatus &&
         matchesRole
       );
     });
-
   }, [
     drives,
     selectedRecruitmentType,
@@ -457,10 +441,25 @@ const cleanString = (val?: string | number | null, fallback = 'Not specified'): 
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onApply(drive.id)}
-                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-extrabold shadow-md cursor-pointer"
+                        disabled={applyingDriveId === drive.id}
+                        onClick={async () => {
+                          setApplyingDriveId(drive.id);
+                          try {
+                            await onApply(drive.id);
+                          } finally {
+                            setApplyingDriveId(null);
+                          }
+                        }}
+                        className="btn btn-primary h-11 w-full rounded-xl text-xs font-extrabold shadow-md cursor-pointer flex items-center justify-center gap-2"
                       >
-                        Apply Now
+                        {applyingDriveId === drive.id ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Applying...
+                          </>
+                        ) : (
+                          'Apply Now'
+                        )}
                       </button>
                     )}
                   </>

@@ -17,6 +17,7 @@ interface CalendarPageProps {
 }
 
 import { getEventColor } from "./calendarUtils";
+import { isOnCampusDrive, isOffCampusDrive, isActiveDrive } from "../../utils/driveFilters";
 
 export default function CalendarPage({
   readOnly = false,
@@ -60,11 +61,20 @@ export default function CalendarPage({
             }
           });
         }
-
         // 2. Derive placement application deadlines from job posting data
         if (Array.isArray(jobPostings)) {
           jobPostings.forEach((jp) => {
             if (jp.deadline) {
+              // TPO (readOnly = false) must NOT see off-campus / scraped drive deadlines
+              if (!readOnly && !isOnCampusDrive(jp)) {
+                return;
+              }
+
+              // Student (readOnly = true) shows both CAMPUS and OFF_CAMPUS drive deadlines for active drives
+              if (readOnly && ((!isOnCampusDrive(jp) && !isOffCampusDrive(jp)) || !isActiveDrive(jp))) {
+                return;
+              }
+
               const deadlineDate = jp.deadline.includes('T') ? jp.deadline.split('T')[0] : jp.deadline;
               const exists = combinedEvents.some((e) => e.scheduledDate === deadlineDate && e.title.includes(jp.title));
               if (!exists) {
@@ -72,22 +82,29 @@ export default function CalendarPage({
                   id: `deadline-${jp.id}`,
                   title: `🔴 ${jp.title} — Application Deadline`,
                   eventType: 'Placement Deadline',
-                  companyName: 'Company',
+                  companyName: jp.companyName || 'Company',
                   role: jp.title,
                   scheduledDate: deadlineDate,
                   startTime: '',
                   description: `Application deadline for ${jp.title}. Package: ${jp.salary ? `${jp.salary} LPA` : 'N/A'}. Location: ${jp.location || 'Campus'}.`,
-                  status: jp.status
+                  status: jp.status,
+                  recruitmentType: jp.recruitmentType,
+                  sourceType: jp.sourceType
                 });
               }
             }
           });
         }
 
-        // Filter events strictly: Admin/TPO (readOnly=false) must never see private events
+        // Filter events strictly: Admin/TPO (readOnly=false) must never see private events or off-campus drives
         const filteredEvents = readOnly
           ? combinedEvents
-          : combinedEvents.filter((e) => !e.isPrivate && !String(e.id).startsWith('private-'));
+          : combinedEvents.filter(
+              (e) =>
+                !e.isPrivate &&
+                !String(e.id).startsWith('private-') &&
+                !isOffCampusDrive(e)
+            );
 
         if (filteredEvents.length > 0) {
           setEvents(filteredEvents);
