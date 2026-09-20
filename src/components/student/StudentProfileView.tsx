@@ -1,7 +1,10 @@
-import React from 'react';
-import { UserCheck, FileText, Upload, Save, CheckCircle2, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserCheck, FileText, Upload, Save, CheckCircle2, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { studentApi } from '../../api/studentApi';
 
 interface StudentProfileViewProps {
+  emailVerified?: boolean;
+  studentId?: string;
   profileName: string;
   setProfileName: (v: string) => void;
   profileEmail: string;
@@ -29,6 +32,8 @@ interface StudentProfileViewProps {
 }
 
 export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
+  emailVerified,
+  studentId,
   profileName,
   setProfileName,
   profileEmail,
@@ -54,6 +59,22 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   handleSaveProfile,
   onGoToAts
 }) => {
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+
+  const handleTriggerVerify = async () => {
+    if (!studentId) return;
+    setSendingVerification(true);
+    try {
+      await studentApi.verifyEmail(studentId);
+      setVerificationSent(true);
+    } catch {
+      // Handled silently or state
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       {/* Page Header */}
@@ -89,7 +110,36 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-slate-700">Email Address</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-slate-700">Email Address</label>
+                {emailVerified === true ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Verified
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200 flex items-center gap-1">
+                      <AlertCircle size={12} /> Unverified
+                    </span>
+                    {studentId && (
+                      <button
+                        type="button"
+                        onClick={handleTriggerVerify}
+                        disabled={sendingVerification || verificationSent}
+                        className="text-xs text-blue-600 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        {sendingVerification ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : verificationSent ? (
+                          'Sent!'
+                        ) : (
+                          'Verify Email'
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
               <input
                 type="email"
                 required

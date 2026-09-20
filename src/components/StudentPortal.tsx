@@ -473,6 +473,8 @@ const TAB_LABELS: Record<StudentTabType, string> = {
             {/* PROFILE */}
             {activeTab === 'profile' && (
               <StudentProfileView
+                emailVerified={currentStudent.emailVerified}
+                studentId={currentStudent.id}
                 profileName={profileName}
                 setProfileName={setProfileName}
                 profileEmail={profileEmail}

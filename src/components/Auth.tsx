@@ -220,6 +220,7 @@ export const Auth: React.FC<AuthProps> = ({
             localStorage.setItem('refreshToken', res.refreshToken);
           }
           localStorage.setItem('role', res.role || 'STUDENT');
+          localStorage.setItem('studentId', loginInput);
         }
 
         onLogin('student', loginInput);

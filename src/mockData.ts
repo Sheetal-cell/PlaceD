@@ -70,6 +70,7 @@ export interface Student {
   applications: Application[];
 
   resumeFeedback?: ResumeFeedback;
+  emailVerified?: boolean;
 }
 
 export interface PlacementDrive {

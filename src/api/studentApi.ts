@@ -70,6 +70,11 @@ export const studentApi = {
   getStageVisualizer: (id: string) =>
     request<StudentRoundVisualizerResponse[]>(`/students/stageVisualizer/${id}`),
 
+  verifyEmail: (id: string) =>
+    request<string>(`/students/${encodeURIComponent(id)}/verifyEmail`, {
+      method: "POST",
+    }),
+
   getAllWithPlacementInfo: async (): Promise<StudentWithPlacement[]> => {
     const [students, applications, jobPostings] = await Promise.all([
       request<StudentResponse[]>("/students/all"),

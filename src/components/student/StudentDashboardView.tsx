@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   GraduationCap,
   Briefcase,
@@ -8,10 +8,14 @@ import {
   Award,
   BookOpen,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Mail,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import type { Student } from '../../mockData';
 import type { StudentTabType } from './StudentSidebar';
+import { studentApi } from '../../api/studentApi';
 
 interface StudentDashboardViewProps {
   currentStudent: Student;
@@ -24,12 +28,71 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({
   setActiveTab,
   onTrackApplication
 }) => {
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+
+  const handleSendVerification = async () => {
+    if (!currentStudent?.id) return;
+    setSendingVerification(true);
+    try {
+      await studentApi.verifyEmail(currentStudent.id);
+      setVerificationSent(true);
+    } catch {
+      // Ignored
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
   const totalApplied = currentStudent.applications.length;
   const isPlaced = currentStudent.placementStatus === 'Placed';
   const firstName = currentStudent.name.split(' ')[0];
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
+      {/* Email Verification Reminder Banner if unverified */}
+      {currentStudent.emailVerified === false && (
+        <div className="glass-card p-4 sm:p-5 rounded-2xl border border-amber-200 bg-amber-50/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-800 shrink-0">
+              <Mail size={22} />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold text-amber-950 font-display">
+                Email Address Not Verified ({currentStudent.email})
+              </h4>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Verify your email address to receive real-time placement notifications and event alerts.
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0">
+            {verificationSent ? (
+              <span className="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center gap-1.5 border border-emerald-200">
+                <CheckCircle2 size={16} className="text-emerald-600" />
+                Verification Sent! Check Inbox
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={sendingVerification}
+                onClick={handleSendVerification}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {sendingVerification ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send Verification Link'
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* Welcoming Hero Banner */}
       <div className="glass-card p-6 sm:p-8 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white shadow-xs flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">

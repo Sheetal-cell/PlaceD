@@ -367,6 +367,7 @@ function AppContent() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedRole = localStorage.getItem('role');
+    const storedStudentId = localStorage.getItem('studentId');
 
     if (token && storedRole) {
       const roleLower = storedRole.toLowerCase();
@@ -379,7 +380,10 @@ function AppContent() {
           ? 'alumni'
           : 'admin';
 
-      setSession({ role: mappedRole });
+      setSession({
+        role: mappedRole,
+        studentId: mappedRole === 'student' ? (storedStudentId || undefined) : undefined,
+      });
     }
   }, []);
 
@@ -880,6 +884,39 @@ function AppContent() {
           return driveItem;
         })
       );
+
+      // Refresh applications directly from backend source of truth
+      try {
+        const updatedAppsList = await applicationApi.getByStudent(formattedStudentId);
+        const refreshedApps: Application[] = updatedAppsList.map((app) => ({
+          id: String(app.id),
+          driveId: String(app.jobPostingId),
+          jobPostingId: String(app.jobPostingId),
+          companyName: app.companyName || '',
+          role: app.jobTitle || '',
+          appliedDate: app.appliedDate || '',
+          status: app.status === 'SHORTLISTED' ? 'Selected' : app.status === 'REJECTED' ? 'Rejected' : 'Applied',
+          currentRoundIndex: 0,
+        }));
+
+        setStudents((previousStudents) =>
+          previousStudents.map((studentItem) => {
+            if (
+              String(studentItem.id).toLowerCase().trim() === sId ||
+              (studentItem.email && studentItem.email.toLowerCase().trim() === sId) ||
+              (studentItem.registrationNumber && String(studentItem.registrationNumber).toLowerCase().trim() === sId)
+            ) {
+              return {
+                ...studentItem,
+                applications: refreshedApps,
+              };
+            }
+            return studentItem;
+          })
+        );
+      } catch {
+        // Fallback to optimistic state if refresh fetch fails
+      }
 
       triggerToast(
         `Application submitted successfully for ${drive.companyName}!`,

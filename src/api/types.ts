@@ -10,6 +10,7 @@ export interface StudentResponse {
   activeBacklogs: number;
   resumeUrl: string;
   year: number;
+  emailVerified?: boolean;
 }
 
 export interface StudentRequest {
@@ -348,10 +349,16 @@ export interface AlumniBlogResponse {
 }
 
 export type NotificationsType =
-  | 'JOB_POSTED'
-  | 'APPLICATION_STATUS'
-  | 'INTERVIEW_SCHEDULED'
-  | 'GENERAL';
+  | 'NEW_JOB'
+  | 'APPLICATION_SUBMITTED'
+  | 'APPLICATION_SHORTLISTED'
+  | 'APPLICATION_REJECTED'
+  | 'ROUND_SCHEDULED'
+  | 'ROUND_SELECTED'
+  | 'ROUND_REJECTED'
+  | 'FINAL_SELECTED'
+  | 'FINAL_REJECTED'
+  | 'PLACEMENT_EVENT';
 
 export interface NotificationResponse {
   id: number;

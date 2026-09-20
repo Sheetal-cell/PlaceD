@@ -76,13 +76,26 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ studentId })
 
   const getBadgeLabel = (type?: string) => {
     switch (type) {
-      case 'JOB_POSTED':
+      case 'NEW_JOB':
         return 'Placement Drive';
-      case 'APPLICATION_STATUS':
-        return 'Application Status';
-      case 'INTERVIEW_SCHEDULED':
-        return 'Interview';
-      case 'GENERAL':
+      case 'APPLICATION_SUBMITTED':
+        return 'Application Submitted';
+      case 'APPLICATION_SHORTLISTED':
+        return 'Shortlisted';
+      case 'APPLICATION_REJECTED':
+        return 'Application Rejected';
+      case 'ROUND_SCHEDULED':
+        return 'Interview Scheduled';
+      case 'ROUND_SELECTED':
+        return 'Round Passed';
+      case 'ROUND_REJECTED':
+        return 'Round Rejected';
+      case 'FINAL_SELECTED':
+        return 'Final Selection';
+      case 'FINAL_REJECTED':
+        return 'Final Rejected';
+      case 'PLACEMENT_EVENT':
+        return 'Placement Event';
       default:
         return 'Notification';
     }
