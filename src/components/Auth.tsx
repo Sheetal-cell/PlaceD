@@ -342,6 +342,9 @@ export const Auth: React.FC<AuthProps> = ({
           identifier: loginInput,
           password: studentPassword,
         });
+        if (res?.role !== 'STUDENT') {
+          throw new Error('This account is not registered with the Student role.');
+        }
 
         if (res?.token) {
           localStorage.setItem('token', res.token);
@@ -558,6 +561,9 @@ export const Auth: React.FC<AuthProps> = ({
           password: alumniPassword,
           role: 'ALUMNI',
         });
+        if (res?.role !== 'ALUMNI') {
+          throw new Error('This account is not registered with the Alumni role.');
+        }
 
         if (res?.token) {
           localStorage.setItem('token', res.token);
@@ -721,6 +727,9 @@ export const Auth: React.FC<AuthProps> = ({
           password: recruiterPassword,
           role: 'RECRUITER',
         });
+        if (res?.role !== 'RECRUITER') {
+          throw new Error('This account is not registered with the Recruiter role.');
+        }
 
         if (res?.token) {
           localStorage.setItem('token', res.token);
@@ -842,6 +851,9 @@ export const Auth: React.FC<AuthProps> = ({
           password: adminPassword,
           role: 'TPO',
         });
+        if (res?.role !== 'TPO') {
+          throw new Error('This account is not registered with the TPO role.');
+        }
 
         if (res?.token) {
           localStorage.setItem('token', res.token);
