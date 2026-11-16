@@ -501,6 +501,7 @@ function AppContent() {
           return {
             id: s.id,
             userId: s.userId,
+            yearOfAdmission: s.yearOfAdmission,
             name: s.name,
             email: s.email,
             phone: s.phone || '9876543210',
@@ -530,6 +531,7 @@ function AppContent() {
               mappedStudents.push({
                 id: singleStudent.id,
                 userId: singleStudent.userId,
+                yearOfAdmission: singleStudent.yearOfAdmission,
                 name: singleStudent.name,
                 email: singleStudent.email,
                 phone: singleStudent.phone || '9876543210',
