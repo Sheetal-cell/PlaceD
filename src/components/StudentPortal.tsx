@@ -345,7 +345,11 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     }
 
     const studentRegDigits = (currentStudent.registrationNumber || currentStudent.id).replace(/\D/g, '');
-    const id12 = studentRegDigits.length === 12 ? studentRegDigits : (studentRegDigits.length > 0 ? studentRegDigits.padStart(12, '0').slice(-12) : '241000110549');
+    if (studentRegDigits.length !== 12) {
+      alert('The linked student registration number must be exactly 12 digits. Contact the placement administrator to correct it.');
+      return;
+    }
+    const id12 = studentRegDigits;
 
     if (!currentStudent.userId) {
       alert('Your student profile is not linked to a backend user account. Contact the placement administrator.');
