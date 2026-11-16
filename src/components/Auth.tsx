@@ -822,13 +822,17 @@ export const Auth: React.FC<AuthProps> = ({
     setIsSubmitting(true);
     try {
       const baseUser = await createBaseUser(recName.trim(), normalizedEmail, recPassword, 'RECRUITER', commonPhone);
-      await recruiterApi.register({
+      const createdRecruiter = await recruiterApi.register({
         userId: baseUser.id,
         companyName: recCompany.trim(),
         designation: newRecruiter.designation,
       });
 
-      onRegisterRecruiter(newRecruiter);
+      onRegisterRecruiter({
+        ...newRecruiter,
+        id: String(createdRecruiter.id),
+        recruiterStatus: createdRecruiter.recruiterStatus,
+      });
       setRecruiterEmail(normalizedEmail);
       setRecruiterPassword('');
       await completeRegistration(baseUser.id, normalizedEmail);
