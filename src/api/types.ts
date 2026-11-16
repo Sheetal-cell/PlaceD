@@ -211,6 +211,7 @@ export interface TPODashboardResponse {
 }
 export interface StudentWithPlacement {
   id: string;
+  userId?: number;
   name: string;
   email: string;
   phone?: string;
