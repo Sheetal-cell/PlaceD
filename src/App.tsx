@@ -1949,13 +1949,21 @@ function AppContent() {
           String(a.id) === String(id)
             ? {
                 ...a,
-                ...requestData,
-                linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || a.linkedinUrl
+                bio: requestData.bio ?? a.bio,
+                location: requestData.location ?? a.location,
+                linkedinUrl: requestData.linkedinUrl ?? requestData.linkedIn ?? a.linkedinUrl,
+                githubUrl: requestData.githubUrl ?? a.githubUrl,
+                hashNodeUrl: requestData.hashNodeUrl ?? a.hashNodeUrl,
+                devToUrl: requestData.devToUrl ?? a.devToUrl,
               }
             : a
         )
       );
-      triggerToast('Alumni profile updated successfully.', 'success');
+      if (requestData.name || requestData.email) {
+        triggerToast('Bio, location, and profile links were saved. Name and email cannot be updated with the current backend DTO.', 'warning');
+      } else {
+        triggerToast('Alumni profile details updated successfully.', 'success');
+      }
     } catch (error) {
       console.error('Failed to update alumni profile:', error);
       triggerToast('Failed to update alumni profile.', 'error');
