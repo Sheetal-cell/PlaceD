@@ -160,7 +160,14 @@ export const Auth: React.FC<AuthProps> = ({
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('placed_verification_resend_attempts') || '[]');
-      if (Array.isArray(saved)) setResendAttempts(saved.filter((value) => typeof value === 'number'));
+      if (Array.isArray(saved)) {
+        const validAttempts = saved.filter((value) => typeof value === 'number' && value > Date.now() - 60 * 60 * 1000);
+        setResendAttempts(validAttempts);
+        const latestAttempt = validAttempts.length ? Math.max(...validAttempts) : 0;
+        if (latestAttempt) {
+          setResendCooldown(Math.max(0, 60 - Math.floor((Date.now() - latestAttempt) / 1000)));
+        }
+      }
       const savedUserId = Number(localStorage.getItem('placed_verification_user_id'));
       if (Number.isInteger(savedUserId) && savedUserId > 0) {
         setVerificationUserId(savedUserId);
