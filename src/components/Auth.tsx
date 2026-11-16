@@ -251,7 +251,10 @@ export const Auth: React.FC<AuthProps> = ({
     const token = searchParams.get('token');
     if (!token) return;
     userApi.confirmVerificationToken(token)
-      .then(() => {
+      .then((message) => {
+        if (typeof message !== 'string' || !message.toLowerCase().includes('email verified') || message.toLowerCase().includes('not verified')) {
+          throw new Error('Verification was not successful.');
+        }
         setError('Your email has been verified. You can now sign in.');
         setVerificationEmail('');
         setVerificationUserId(null);
