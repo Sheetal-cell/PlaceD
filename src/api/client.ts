@@ -38,15 +38,14 @@ async function request<T>(
     "/auth/",
     "/user/add",
     "/user/verify-email",
-    "/user/",
     "/students/add",
     "/alumni/add",
     "/recruiters/register",
     "/tpo/register",
   ];
-  const isPublicEndpoint = publicEndpoints.some((path) =>
-    endpoint.startsWith(path)
-  );
+  const isPublicEndpoint =
+    publicEndpoints.some((path) => endpoint.startsWith(path)) ||
+    /^\\/user\\/\\d+\\/verifyEmail/.test(endpoint);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
