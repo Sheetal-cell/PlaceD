@@ -247,6 +247,21 @@ export const Auth: React.FC<AuthProps> = ({
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (!token) return;
+    userApi.confirmVerificationToken(token)
+      .then(() => {
+        setError('Your email has been verified. You can now sign in.');
+        setVerificationEmail('');
+        setVerificationUserId(null);
+        localStorage.removeItem('placed_verification_user_id');
+        localStorage.removeItem('placed_verification_email');
+        setSearchParams({ mode: 'login' });
+      })
+      .catch(() => setError('This verification link is invalid or expired.'));
+  }, [searchParams, setSearchParams]);
+
   const handleModeChange = (
     mode: 'login' | 'register'
   ) => {
@@ -283,6 +298,7 @@ export const Auth: React.FC<AuthProps> = ({
   >('Computer Science');
 
   const [regCgpa, setRegCgpa] = useState('8.0');
+  const [regYearOfAdmission, setRegYearOfAdmission] = useState('');
   const [regSkills, setRegSkills] = useState('React, TypeScript, JavaScript');
   const [regResume, setRegResume] = useState('');
 
@@ -530,7 +546,7 @@ export const Auth: React.FC<AuthProps> = ({
         cgpa: newStudent.cgpa,
         activeBacklogs: 0,
         resumeUrl: regResume.trim(),
-        yearOfAdmission: String(new Date().getFullYear()),
+        yearOfAdmission: regYearOfAdmission.trim(),
         userId: baseUser.id,
       });
 
@@ -1656,6 +1672,14 @@ export const Auth: React.FC<AuthProps> = ({
                           </div>
                         </div>
 
+                      </div>
+
+                      <div className="auth-input-group mb-3">
+                        <label className="auth-input-label">Year of Admission *</label>
+                        <input type="number" required min="1950" max={new Date().getFullYear()}
+                          value={regYearOfAdmission}
+                          onChange={(e) => setRegYearOfAdmission(e.target.value)}
+                          placeholder="e.g. 2024" className="auth-input-field" />
                       </div>
 
                       <div className="auth-input-group">
