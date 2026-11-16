@@ -41,26 +41,20 @@ export const studentApi = {
       }),
     }),
 
-  update: (data: StudentRequest) => {
-    const cgpaVal = Number(data.cgpa ?? data.CGPA ?? 0);
-    const passwordVal = (data.password && data.password.trim().length >= 6) ? data.password.trim() : "password123";
-    const payload: Record<string, any> = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      password: passwordVal,
-      phone: data.phone,
-      department: normalizeDepartment(data.department),
-      activeBacklogs: Number(data.activeBacklogs ?? 0),
-      resumeUrl: (data.resumeUrl && data.resumeUrl.trim().length > 0) ? data.resumeUrl : "https://example.com/resume.pdf",
-      year: Math.min(4, Math.max(1, Number(data.year ?? 4))),
-      cgpa: cgpaVal,
-    };
-    return request<StudentResponse>("/students/update", {
+  update: (data: StudentRequest) =>
+    request<StudentResponse>("/students/update", {
       method: "PUT",
-      body: JSON.stringify(payload),
-    });
-  },
+      body: JSON.stringify({
+        id: data.id,
+        department: normalizeDepartment(data.department),
+        cgpa: Number(data.cgpa),
+        activeBacklogs: Number(data.activeBacklogs ?? 0),
+        resumeUrl: data.resumeUrl,
+        yearOfAdmission: data.yearOfAdmission,
+        dateOfBirth: data.dateOfBirth,
+        userId: data.userId,
+      }),
+    }),
 
   delete: (id: string) =>
     request<string>(`/students/delete/${id}`, { method: "DELETE" }),
