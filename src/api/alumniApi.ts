@@ -187,6 +187,22 @@ export const alumniApi = {
     };
   },
 
+  async addDetails(requestData: {
+    userId: number;
+    studentRegnNo: string;
+    bio?: string;
+    location?: string;
+    linkedinUrl?: string;
+    githubUrl?: string;
+    hashNodeUrl?: string;
+    devToUrl?: string;
+  }): Promise<string> {
+    return request<string>('/alumni/add', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  },
+
   async add(requestData: AlumniRegistrationRequest): Promise<any> {
     return request<string>('/alumni/add', {
       method: 'POST',
