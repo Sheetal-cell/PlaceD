@@ -2,7 +2,7 @@ import request from "./client";
 import type { RecruiterResponse, RecruiterRequest } from "./types";
 
 const enrichRecruiter = async (recruiter: RecruiterResponse): Promise<RecruiterResponse> => {
-  if (!recruiter.userId) return recruiter;
+  if (!recruiter.userId) return { ...recruiter, name: '', email: '' };
   const user = await request<any>(`/user/${recruiter.userId}`).catch(() => null);
   const name = user?.nameResponseDTO
     ? [user.nameResponseDTO.firstName, user.nameResponseDTO.middleName, user.nameResponseDTO.lastName].filter(Boolean).join(" ")
