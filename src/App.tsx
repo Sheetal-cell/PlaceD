@@ -859,6 +859,7 @@ function AppContent() {
       }
     }
 
+    // Keep placed_device_id across sign-outs; only authentication/session data is cleared.
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('role');
