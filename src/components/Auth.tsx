@@ -166,6 +166,68 @@ export const Auth: React.FC<AuthProps> = ({
     }
   }, []);
 
+  const buildBaseUserRequest = (
+    fullName: string,
+    email: string,
+    password: string,
+    role: 'STUDENT' | 'ALUMNI' | 'RECRUITER' | 'TPO',
+    phone: string
+  ) => {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) throw new Error('Please enter your full name.');
+    const firstName = parts[0];
+    const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+    const middleName = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+    const numericCollegeId = Number(collegeId);
+    if (!Number.isInteger(numericCollegeId) || numericCollegeId <= 0) {
+      throw new Error('Enter the College ID assigned by your placement administrator.');
+    }
+    if (!addressLine1.trim() || !addressCity.trim() || !addressState.trim() ||
+        !addressCountry.trim() || !addressPostalCode.trim()) {
+      throw new Error('Complete the required address and college details.');
+    }
+    if (!/^[6-9]\d{9}$/.test(phone.trim())) {
+      throw new Error('Enter a valid 10-digit mobile number.');
+    }
+    return {
+      nameRequest: { pronounce: 'They', firstName, middleName, lastName },
+      addressRequest: {
+        addressLine1: addressLine1.trim(),
+        addressLine2: addressLine2.trim(),
+        city: addressCity.trim(),
+        state: addressState.trim(),
+        country: addressCountry.trim(),
+        postalCode: addressPostalCode.trim(),
+      },
+      email: email.trim().toLowerCase(),
+      password,
+      role,
+      phone: phone.trim(),
+      college_id: numericCollegeId,
+    };
+  };
+
+  const createBaseUser = async (
+    fullName: string,
+    email: string,
+    password: string,
+    role: 'STUDENT' | 'ALUMNI' | 'RECRUITER' | 'TPO',
+    phone: string
+  ) => userApi.register(buildBaseUserRequest(fullName, email, password, role, phone));
+
+  const completeRegistration = async (userId: number, email: string) => {
+    setVerificationUserId(userId);
+    setVerificationEmail(email.toLowerCase().trim());
+    setAuthMode('login');
+    setSearchParams({ mode: 'login' });
+    try {
+      await userApi.sendVerification(userId);
+      setError('Your account has been created and a verification email has been requested. Check your inbox.');
+    } catch {
+      setError('Your account was created, but the backend could not send the verification email. Please contact the placement administrator.');
+    }
+  };
+
   useEffect(() => {
     const modeParam = searchParams.get('mode');
 
@@ -447,29 +509,24 @@ export const Auth: React.FC<AuthProps> = ({
 
     setIsSubmitting(true);
     try {
+      if (!regResume.trim() || !/^https?:\/\//i.test(regResume.trim())) {
+        throw new Error('Enter a valid public resume URL (https://...).');
+      }
+      const baseUser = await createBaseUser(newStudent.name, normalizedEmail, regPassword, 'STUDENT', cleanedPhone);
       await studentApi.add({
         id: numericRegNo,
-        name: newStudent.name,
-        email: newStudent.email,
-        password: newStudent.password || 'password123',
-        phone: cleanedPhone,
         department: newStudent.department,
-        resumeUrl: newStudent.resumeText || 'https://example.com/resume.pdf',
-        year: 4,
         cgpa: newStudent.cgpa,
-        activeBacklogs: 0
+        activeBacklogs: 0,
+        resumeUrl: regResume.trim(),
+        yearOfAdmission: String(new Date().getFullYear()),
+        userId: baseUser.id,
       });
 
       onRegister(newStudent);
-
       setStudentRegNo(normalizedEmail);
       setStudentPassword('');
-
-      setAuthMode('login');
-      setSearchParams({ mode: 'login' });
-
-      setVerificationEmail(normalizedEmail);
-      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
+      await completeRegistration(baseUser.id, normalizedEmail);
     } catch (err: any) {
       setError(err?.message || 'Student registration failed.');
     } finally {
@@ -615,14 +672,20 @@ export const Auth: React.FC<AuthProps> = ({
 
     try {
       setIsSubmitting(true);
-      await onRegisterAlumni(registrationRequest);
-
+      if (!/^\d{12}$/.test(alumniStudentRegnNo.trim())) {
+        throw new Error('Enter the 12-digit registration number of your existing student record.');
+      }
+      const baseUser = await createBaseUser(alumniName.trim(), normalizedEmail, alumniPassword, 'ALUMNI', commonPhone);
+      await alumniApi.addDetails({
+        userId: baseUser.id,
+        studentRegnNo: alumniStudentRegnNo.trim(),
+        bio: `${registrationRequest.currentRole} at ${registrationRequest.currentCompany}; graduated ${graduationYear}; department: ${registrationRequest.department}`,
+        location: addressCity.trim(),
+        linkedinUrl: registrationRequest.linkedIn,
+      });
       setAlumniEmail(normalizedEmail);
       setStudentPassword('');
-      setAuthMode('login');
-      setSearchParams({ mode: 'login' });
-      setVerificationEmail(normalizedEmail);
-      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
+      await completeRegistration(baseUser.id, normalizedEmail);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Unable to register alumni.'
@@ -1200,6 +1263,47 @@ export const Auth: React.FC<AuthProps> = ({
                       <input required value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)}
                         className="auth-input-field" />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {authMode === 'register' && (
+                <div className="auth-form-scrollable my-4 rounded-xl border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-3">Additional details required by the backend</h3>
+                  {activeRole !== 'student' && (
+                    <div className="auth-input-group mb-3">
+                      <label className="auth-input-label">Mobile Number *</label>
+                      <input type="tel" required maxLength={10} value={commonPhone}
+                        onChange={(e) => setCommonPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder="10-digit mobile number" className="auth-input-field" />
+                    </div>
+                  )}
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">College ID *</label>
+                    <input type="number" min="1" required value={collegeId}
+                      onChange={(e) => setCollegeId(e.target.value)}
+                      placeholder="College ID supplied by your TPO" className="auth-input-field" />
+                    <p className="text-xs text-slate-500 mt-1">The existing backend accepts a numeric college ID but does not expose a college-list endpoint.</p>
+                  </div>
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">Address Line 1 *</label>
+                    <input required value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)}
+                      placeholder="House / street / locality" className="auth-input-field" />
+                  </div>
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">Address Line 2</label>
+                    <input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)}
+                      placeholder="Apartment / landmark (optional)" className="auth-input-field" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="auth-input-group"><label className="auth-input-label">City *</label>
+                      <input required value={addressCity} onChange={(e) => setAddressCity(e.target.value)} className="auth-input-field" /></div>
+                    <div className="auth-input-group"><label className="auth-input-label">State *</label>
+                      <input required value={addressState} onChange={(e) => setAddressState(e.target.value)} className="auth-input-field" /></div>
+                    <div className="auth-input-group"><label className="auth-input-label">Country *</label>
+                      <input required value={addressCountry} onChange={(e) => setAddressCountry(e.target.value)} className="auth-input-field" /></div>
+                    <div className="auth-input-group"><label className="auth-input-label">Postal Code *</label>
+                      <input required value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} className="auth-input-field" /></div>
                   </div>
                 </div>
               )}
