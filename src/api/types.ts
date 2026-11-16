@@ -11,7 +11,7 @@ export interface StudentResponse {
   activeBacklogs: number;
   resumeUrl: string;
   yearOfAdmission?: string;
-  year: number;
+  year?: number;
   dateOfBirth?: string;
   emailVerified?: boolean;
 }
@@ -212,6 +212,7 @@ export interface TPODashboardResponse {
 export interface StudentWithPlacement {
   id: string;
   userId?: number;
+  yearOfAdmission?: string;
   name: string;
   email: string;
   phone?: string;
