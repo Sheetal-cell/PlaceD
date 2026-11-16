@@ -1,14 +1,14 @@
 export interface StudentResponse {
   id: string;
   userId?: number;
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
   registrationNumber?: string;
-  phone?: string;
+  phone: string;
   department: string;
   cgpa?: number;
   CGPA?: number;
-  activeBacklogs?: number;
+  activeBacklogs: number;
   resumeUrl: string;
   yearOfAdmission?: string;
   year?: number;
