@@ -33,6 +33,7 @@ async function enrichStudent(student: StudentResponse): Promise<StudentResponse>
     email: user?.email || "",
     phone: user?.phone || "",
     emailVerified: Boolean(user?.emailVerified),
+    year: student.year ?? 0,
   };
 }
 
