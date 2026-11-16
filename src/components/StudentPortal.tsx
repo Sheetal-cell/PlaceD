@@ -395,8 +395,14 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     };
 
     onUpdateStudentProfile(updatedStudent);
-    if (cleanedName !== currentStudent.name || cleanedEmail !== currentStudent.email || cleanedPhone !== currentStudent.phone) {
-      alert('Academic details and resume URL were saved. Name, email, and phone changes are currently local only because the backend does not provide a safe partial user-profile update endpoint.');
+    if (
+      cleanedName !== currentStudent.name ||
+      cleanedEmail !== currentStudent.email ||
+      cleanedPhone !== currentStudent.phone ||
+      Boolean(profilePassword.trim()) ||
+      profileSkills !== (currentStudent.skills || []).join(', ')
+    ) {
+      alert('The backend saved department, CGPA, backlogs, admission year, and resume URL. Name, email, phone, password, and skills are not persisted because the current backend has no matching safe update DTO for these fields.');
     }
   };
 
