@@ -26,25 +26,20 @@ export const studentApi = {
 
   getById: (id: string) => request<StudentResponse>(`/students/${id}`),
 
-  add: (data: StudentRequest) => {
-    const cgpaVal = Number(data.cgpa ?? data.CGPA ?? 0);
-    const payload: Record<string, any> = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      phone: data.phone,
-      department: normalizeDepartment(data.department),
-      activeBacklogs: Number(data.activeBacklogs ?? 0),
-      resumeUrl: (data.resumeUrl && data.resumeUrl.trim().length > 0) ? data.resumeUrl : "https://example.com/resume.pdf",
-      year: Math.min(4, Math.max(1, Number(data.year ?? 4))),
-      cgpa: cgpaVal,
-    };
-    return request<StudentResponse>("/students/add", {
+  add: (data: StudentRequest) =>
+    request<StudentResponse>("/students/add", {
       method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
+      body: JSON.stringify({
+        id: data.id,
+        department: normalizeDepartment(data.department),
+        cgpa: Number(data.cgpa ?? 0),
+        activeBacklogs: Number(data.activeBacklogs ?? 0),
+        resumeUrl: data.resumeUrl,
+        yearOfAdmission: data.yearOfAdmission,
+        dateOfBirth: data.dateOfBirth,
+        userId: data.userId,
+      }),
+    }),
 
   update: (data: StudentRequest) => {
     const cgpaVal = Number(data.cgpa ?? data.CGPA ?? 0);
