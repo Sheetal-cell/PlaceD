@@ -130,41 +130,44 @@ export const alumniApi = {
     const res = await request<any[]>('/alumni/all');
     if (!Array.isArray(res)) return [];
 
-    return res.map((a: any) => ({
-      id: String(a.id),
-      name: a.name || '',
-      email: a.email || '',
-      bio: a.bio || '',
-      location: a.location || '',
-      linkedinUrl: a.linkedinUrl || a.linkedIn || '',
-      githubUrl: a.githubUrl || '',
-      hashNodeUrl: a.hashNodeUrl || '',
-      devToUrl: a.devToUrl || '',
-      graduationYear: a.graduationYear || 2024,
-      currentCompany: a.currentCompany || '',
-      currentRole: a.currentRole || '',
-      department: a.department || 'CSE',
-      linkedIn: a.linkedinUrl || a.linkedIn || '',
+    return Promise.all(res.map(async (a: any) => {
+      const user = a.userId ? await request<any>(`/user/${a.userId}`).catch(() => null) : null;
+      const nameData = user?.nameResponseDTO;
+      const name = nameData
+        ? [nameData.firstName, nameData.middleName, nameData.lastName].filter(Boolean).join(' ')
+        : '';
+      return {
+        id: String(a.id),
+        name,
+        email: user?.email || '',
+        bio: a.bio || '',
+        location: a.location || '',
+        linkedinUrl: a.linkedinUrl || '',
+        githubUrl: a.githubUrl || '',
+        hashNodeUrl: a.hashNodeUrl || '',
+        devToUrl: a.devToUrl || '',
+        linkedIn: a.linkedinUrl || '',
+      };
     }));
   },
 
   async getById(id: string | number): Promise<Alumni> {
     const a = await request<any>(`/alumni/${id}`);
-
+    const user = a.userId ? await request<any>(`/user/${a.userId}`).catch(() => null) : null;
+    const nameData = user?.nameResponseDTO;
+    const name = nameData
+      ? [nameData.firstName, nameData.middleName, nameData.lastName].filter(Boolean).join(' ')
+      : '';
     return {
       id: String(a.id),
-      name: a.name || '',
-      email: a.email || '',
+      name,
+      email: user?.email || '',
       bio: a.bio || '',
       location: a.location || '',
       linkedinUrl: a.linkedinUrl || '',
       githubUrl: a.githubUrl || '',
       hashNodeUrl: a.hashNodeUrl || '',
       devToUrl: a.devToUrl || '',
-      graduationYear: a.graduationYear || 2024,
-      currentCompany: a.currentCompany || '',
-      currentRole: a.currentRole || '',
-      department: a.department || 'CSE',
       linkedIn: a.linkedinUrl || '',
     };
   },
