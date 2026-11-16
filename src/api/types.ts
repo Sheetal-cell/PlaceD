@@ -300,22 +300,19 @@ export interface StudentRoundVisualizerResponse {
 }
 
 export interface TPOUserRequest {
-  name: string;
-  email: string;
-  password?: string;
+  userId: number;
 }
 
 export interface TPOUserResponse {
   id: number;
-  name: string;
-  email: string;
+  userId: number;
+  hrContacts?: unknown[];
 }
 
 export interface AlumniRequest {
   id?: number;
-  email?: string;
-  password?: string;
-  name?: string;
+  userId: number;
+  studentRegnNo: string;
   bio?: string;
   location?: string;
   linkedinUrl?: string;
@@ -326,8 +323,8 @@ export interface AlumniRequest {
 
 export interface AlumniResponse {
   id: number;
-  email: string;
-  name: string;
+  userId: number;
+  studentRegnNo: string;
   bio?: string;
   location?: string;
   linkedinUrl?: string;
