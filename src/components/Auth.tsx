@@ -30,7 +30,6 @@ import { authApi } from '../api/authApi';
 import { studentApi } from '../api/studentApi';
 import { recruiterApi } from '../api/recruiterApi';
 import { userApi } from '../api/userApi';
-import { companyApi } from '../api/companyApi';
 import { Footer } from './Footer';
 import './Auth.css';
 
@@ -836,16 +835,10 @@ export const Auth: React.FC<AuthProps> = ({
 
     setIsSubmitting(true);
     try {
-      const matchingCompany = (await companyApi.getAll()).find(
-        (company) => company.name.trim().toLowerCase() === recCompany.trim().toLowerCase()
-      );
-      if (!matchingCompany) {
-        throw new Error('This company is not registered in PlaceD yet. Ask the TPO to add the company first.');
-      }
       const baseUser = await createBaseUser(recName.trim(), normalizedEmail, recPassword, 'RECRUITER', commonPhone);
       await recruiterApi.register({
         userId: baseUser.id,
-        companyName: matchingCompany.name,
+        companyName: recCompany.trim(),
         designation: newRecruiter.designation,
       });
 
