@@ -379,20 +379,15 @@ export const Auth: React.FC<AuthProps> = ({
           }
           localStorage.setItem('role', res.role || 'STUDENT');
 
-          // Resolve student registration ID (e.g. 241000110549) if identifier was an email
+          // The backend student profile is keyed by the 12-digit registration number.
           let resolvedStudentId = loginInput;
-          try {
+          if (!/^\\d{12}$/.test(loginInput)) {
             const allStudents = await studentApi.getAll();
             const found = allStudents.find(
-              (s) =>
-                String(s.id).toLowerCase().trim() === loginInput.toLowerCase() ||
-                (s.email && s.email.toLowerCase().trim() === loginInput.toLowerCase())
+              (student) => student.email?.toLowerCase().trim() === loginInput.toLowerCase()
             );
-            if (found) {
-              resolvedStudentId = String(found.id);
-            }
-          } catch {
-            // Fallback to loginInput
+            if (!found) throw new Error('Your student account has no linked student profile. Contact the placement administrator.');
+            resolvedStudentId = String(found.id);
           }
 
           localStorage.setItem('studentId', resolvedStudentId);
@@ -598,20 +593,12 @@ export const Auth: React.FC<AuthProps> = ({
           }
           localStorage.setItem('role', res.role || 'ALUMNI');
 
-          let resolvedAlumniId = loginEmail;
-          try {
-            const allAlumni = await alumniApi.getAll();
-            const found = allAlumni.find(
-              (a) =>
-                String(a.id).toLowerCase().trim() === loginEmail.toLowerCase() ||
-                (a.email && a.email.toLowerCase().trim() === loginEmail.toLowerCase())
-            );
-            if (found) {
-              resolvedAlumniId = String(found.id);
-            }
-          } catch {
-            // Fallback
-          }
+          const allAlumni = await alumniApi.getAll();
+          const foundAlumni = allAlumni.find(
+            (a) => a.email.toLowerCase().trim() === loginEmail.toLowerCase()
+          );
+          if (!foundAlumni) throw new Error('Your account has no linked alumni profile. Contact the placement administrator.');
+          const resolvedAlumniId = String(foundAlumni.id);
 
           localStorage.setItem('alumniId', resolvedAlumniId);
           onLogin('alumni', resolvedAlumniId);
@@ -765,30 +752,26 @@ export const Auth: React.FC<AuthProps> = ({
           localStorage.setItem('role', res.role || 'RECRUITER');
         }
 
-        const allRecruiters = await recruiterApi.getAll().catch(() => []);
-
+        const allRecruiters = await recruiterApi.getAll();
         const realRecruiter = allRecruiters.find(
-          (r) => r.email.toLowerCase().trim() === identifier.toLowerCase().trim()
+          (recruiter) => recruiter.email.toLowerCase().trim() === identifier.toLowerCase().trim()
         );
-
-        if (realRecruiter) {
-          if (realRecruiter.recruiterStatus !== 'APPROVED') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('role');
-            if (realRecruiter.recruiterStatus === 'REJECTED') {
-              setError('Your recruiter account request has been rejected by TPO.');
-            } else {
-              setError('Your recruiter account is pending TPO approval. Please wait for the TPO to approve your account before logging in.');
-            }
-            return;
-          }
-          localStorage.setItem('recruiterId', String(realRecruiter.id));
-          onLogin('recruiter', String(realRecruiter.id));
-        } else {
-          localStorage.setItem('recruiterId', identifier);
-          onLogin('recruiter', identifier);
+        if (!realRecruiter) {
+          throw new Error('Your account has no linked recruiter profile. Contact the placement administrator.');
         }
+        if (realRecruiter.recruiterStatus !== 'APPROVED') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('role');
+          if (realRecruiter.recruiterStatus === 'REJECTED') {
+            setError('Your recruiter account request has been rejected by TPO.');
+          } else {
+            setError('Your recruiter account is pending TPO approval. Please wait for the TPO to approve your account before logging in.');
+          }
+          return;
+        }
+        localStorage.setItem('recruiterId', String(realRecruiter.id));
+        onLogin('recruiter', String(realRecruiter.id));
       } catch (err: any) {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
