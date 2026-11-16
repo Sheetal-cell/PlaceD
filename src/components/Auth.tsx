@@ -2490,7 +2490,7 @@ export const Auth: React.FC<AuthProps> = ({
                               Recruiter Registration
                             </strong>
                             <p>
-                              Your registration will be submitted to the TPO for approval. You will only be able to access the Recruiter Portal after your account is approved by TPO.
+                              Your company must already exist in PlaceD. Your registration will be submitted to the TPO for approval. You will only be able to access the Recruiter Portal after your account is approved by TPO.
                             </p>
                           </div>
                         </div>
