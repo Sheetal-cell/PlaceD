@@ -347,25 +347,28 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     const studentRegDigits = (currentStudent.registrationNumber || currentStudent.id).replace(/\D/g, '');
     const id12 = studentRegDigits.length === 12 ? studentRegDigits : (studentRegDigits.length > 0 ? studentRegDigits.padStart(12, '0').slice(-12) : '241000110549');
 
-    const validPassword = (profilePassword && profilePassword.trim().length >= 6)
-      ? profilePassword.trim()
-      : (currentStudent.password && currentStudent.password.length >= 6 ? currentStudent.password : 'password123');
+    if (!currentStudent.userId) {
+      alert('Your student profile is not linked to a backend user account. Contact the placement administrator.');
+      return;
+    }
+    if (!profileResume.trim() || !/^https?:\/\//i.test(profileResume.trim())) {
+      alert('Enter a valid public resume URL before saving.');
+      return;
+    }
 
     try {
       await studentApi.update({
         id: id12,
-        name: cleanedName,
-        email: cleanedEmail,
-        password: validPassword,
-        phone: cleanedPhone,
         department: profileBranch,
         activeBacklogs: backlogsNum,
-        resumeUrl: (profileResume && profileResume.trim().length > 0) ? profileResume.trim() : "https://example.com/resume.pdf",
-        year: Math.min(4, Math.max(1, Number(currentStudent.year || 4))),
-        cgpa: cgpaNum
+        resumeUrl: profileResume.trim(),
+        yearOfAdmission: String(currentStudent.year || new Date().getFullYear()),
+        cgpa: cgpaNum,
+        userId: currentStudent.userId,
       });
     } catch (err: any) {
-      console.warn('Backend student update failed or offline:', err);
+      alert(err instanceof Error ? err.message : 'Unable to save student details.');
+      return;
     }
 
     const updatedStudent: Student = {
@@ -373,7 +376,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       name: cleanedName,
       email: cleanedEmail,
       phone: cleanedPhone,
-      password: validPassword,
       department: profileBranch,
       cgpa: cgpaNum,
       backlogs: backlogsNum,
@@ -385,6 +387,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     };
 
     onUpdateStudentProfile(updatedStudent);
+    if (cleanedName !== currentStudent.name || cleanedEmail !== currentStudent.email || cleanedPhone !== currentStudent.phone) {
+      alert('Academic details and resume URL were saved. Name, email, and phone changes are currently local only because the backend does not provide a safe partial user-profile update endpoint.');
+    }
   };
 
 const TAB_LABELS: Record<StudentTabType, string> = {
