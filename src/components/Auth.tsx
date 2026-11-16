@@ -113,6 +113,7 @@ export const Auth: React.FC<AuthProps> = ({
   const [alumniStudentRegnNo, setAlumniStudentRegnNo] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendAttempts, setResendAttempts] = useState<number[]>([]);
+  void onRegisterAlumni;
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -161,6 +162,11 @@ export const Auth: React.FC<AuthProps> = ({
     try {
       const saved = JSON.parse(localStorage.getItem('placed_verification_resend_attempts') || '[]');
       if (Array.isArray(saved)) setResendAttempts(saved.filter((value) => typeof value === 'number'));
+      const savedUserId = Number(localStorage.getItem('placed_verification_user_id'));
+      if (Number.isInteger(savedUserId) && savedUserId > 0) {
+        setVerificationUserId(savedUserId);
+        setVerificationEmail(localStorage.getItem('placed_verification_email') || '');
+      }
     } catch {
       setResendAttempts([]);
     }
@@ -217,6 +223,8 @@ export const Auth: React.FC<AuthProps> = ({
 
   const completeRegistration = async (userId: number, email: string) => {
     setVerificationUserId(userId);
+    localStorage.setItem('placed_verification_user_id', String(userId));
+    localStorage.setItem('placed_verification_email', email.toLowerCase().trim());
     setVerificationEmail(email.toLowerCase().trim());
     setAuthMode('login');
     setSearchParams({ mode: 'login' });
