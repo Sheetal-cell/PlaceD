@@ -554,7 +554,7 @@ export const Auth: React.FC<AuthProps> = ({
         userId: baseUser.id,
       });
 
-      onRegister(newStudent);
+      onRegister({ ...newStudent, userId: baseUser.id, yearOfAdmission: regYearOfAdmission.trim() });
       setStudentRegNo(normalizedEmail);
       setStudentPassword('');
       await completeRegistration(baseUser.id, normalizedEmail);
