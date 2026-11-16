@@ -11,7 +11,7 @@ export interface StudentResponse {
   activeBacklogs: number;
   resumeUrl: string;
   yearOfAdmission?: string;
-  year?: number;
+  year: number;
   dateOfBirth?: string;
   emailVerified?: boolean;
 }
