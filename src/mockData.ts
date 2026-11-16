@@ -55,6 +55,7 @@ export interface Student {
   password: string;
   phone?: string;
   year?: number;
+  yearOfAdmission?: string;
 
   department: string;
   branch: string;
