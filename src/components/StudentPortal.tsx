@@ -359,6 +359,10 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       alert('Enter a valid public resume URL before saving.');
       return;
     }
+    if (!currentStudent.yearOfAdmission?.trim()) {
+      alert('Year of admission is missing from your backend profile. Contact the placement administrator.');
+      return;
+    }
 
     try {
       await studentApi.update({
@@ -366,7 +370,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         department: profileBranch,
         activeBacklogs: backlogsNum,
         resumeUrl: profileResume.trim(),
-        yearOfAdmission: String(currentStudent.year || new Date().getFullYear()),
+        yearOfAdmission: currentStudent.yearOfAdmission.trim(),
         cgpa: cgpaNum,
         userId: currentStudent.userId,
       });
