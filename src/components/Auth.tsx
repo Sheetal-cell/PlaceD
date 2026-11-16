@@ -1197,7 +1197,7 @@ export const Auth: React.FC<AuthProps> = ({
                   <span className="auth-error-dot" />
 
                   <span>{error}</span>
-                  {verificationEmail && (
+                  {verificationEmail && verificationUserId && (
                     <button
                       type="button"
                       onClick={handleResendVerification}
@@ -1666,22 +1666,19 @@ export const Auth: React.FC<AuthProps> = ({
                       <div className="auth-input-group">
 
                         <label className="auth-input-label">
-                          Resume Overview
+                          Public Resume URL *
                         </label>
 
                         <div className="auth-input-box">
 
-                          <textarea
-                            rows={2}
-                            value={regResume}
-                            onChange={(e) =>
-                              setRegResume(
-                                e.target.value
-                              )
-                            }
-                            placeholder="Brief summary of skills, experience and achievements..."
-                            className="auth-input-field resize-none w-full"
-                          />
+                            <input
+                              type="url"
+                              required
+                              value={regResume}
+                              onChange={(e) => setRegResume(e.target.value)}
+                              placeholder="https://drive.google.com/..."
+                              className="auth-input-field"
+                            />
 
                         </div>
                       </div>
@@ -1896,6 +1893,14 @@ export const Auth: React.FC<AuthProps> = ({
                           </div>
                         </div>
 
+                      </div>
+
+                      <div className="auth-input-group mb-3">
+                        <label className="auth-input-label">Existing Student Registration Number *</label>
+                        <input type="text" inputMode="numeric" maxLength={12} required value={alumniStudentRegnNo}
+                          onChange={(e) => setAlumniStudentRegnNo(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                          placeholder="12-digit registration number linked to your student record"
+                          className="auth-input-field" />
                       </div>
 
                       {/* Password + Graduation Year */}
