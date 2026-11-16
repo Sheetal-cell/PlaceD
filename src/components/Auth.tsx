@@ -400,7 +400,7 @@ export const Auth: React.FC<AuthProps> = ({
           localStorage.setItem('studentId', resolvedStudentId);
           onLogin('student', resolvedStudentId);
         } else {
-          onLogin('student', loginInput);
+          throw new Error('The backend did not return an access token. Please try again.');
         }
       } catch (err: any) {
         localStorage.removeItem('token');
@@ -610,8 +610,7 @@ export const Auth: React.FC<AuthProps> = ({
           localStorage.setItem('alumniId', resolvedAlumniId);
           onLogin('alumni', resolvedAlumniId);
         } else {
-          localStorage.setItem('alumniId', loginEmail);
-          onLogin('alumni', loginEmail);
+          throw new Error('The backend did not return an access token. Please try again.');
         }
       } catch (err: any) {
         localStorage.removeItem('token');
@@ -751,13 +750,10 @@ export const Auth: React.FC<AuthProps> = ({
           throw new Error('This account is not registered with the Recruiter role.');
         }
 
-        if (res?.token) {
-          localStorage.setItem('token', res.token);
-          if (res.refreshToken) {
-            localStorage.setItem('refreshToken', res.refreshToken);
-          }
-          localStorage.setItem('role', res.role || 'RECRUITER');
-        }
+        if (!res?.token) throw new Error('The backend did not return an access token. Please try again.');
+        localStorage.setItem('token', res.token);
+        if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken);
+        localStorage.setItem('role', res.role || 'RECRUITER');
 
         const allRecruiters = await recruiterApi.getAll();
         const realRecruiter = allRecruiters.find(
