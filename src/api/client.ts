@@ -36,10 +36,13 @@ async function request<T>(
 
   const publicEndpoints = [
     "/auth/",
-    "/users/register",
-    "/recruiters/register",
+    "/user/add",
+    "/user/verify-email",
+    "/user/",
     "/students/add",
     "/alumni/add",
+    "/recruiters/register",
+    "/tpo/register",
   ];
   const isPublicEndpoint = publicEndpoints.some((path) =>
     endpoint.startsWith(path)
