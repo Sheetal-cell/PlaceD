@@ -182,18 +182,8 @@ export const alumniApi = {
     // No-op: Data is maintained in PostgreSQL database
   },
 
-  async register(requestData: AlumniRegistrationRequest): Promise<any> {
-    await this.add(requestData);
-    return {
-      id: String(Date.now()),
-      name: requestData.name,
-      email: requestData.email,
-      department: requestData.department || 'Computer Science',
-      graduationYear: requestData.graduationYear || new Date().getFullYear(),
-      currentCompany: requestData.currentCompany || '',
-      currentRole: requestData.currentRole || '',
-      linkedIn: requestData.linkedIn || '',
-    };
+  async register(_requestData: AlumniRegistrationRequest): Promise<never> {
+    throw new Error('Alumni registration requires a base user account and an existing student registration number. Use the two-step registration flow in Auth.');
   },
 
   async addDetails(requestData: {
@@ -212,21 +202,8 @@ export const alumniApi = {
     });
   },
 
-  async add(requestData: AlumniRegistrationRequest): Promise<any> {
-    return request<string>('/alumni/add', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: requestData.name,
-        email: requestData.email,
-        password: requestData.password || 'password',
-        bio: requestData.bio || requestData.currentRole || '',
-        location: requestData.location || '',
-        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || '',
-        githubUrl: requestData.githubUrl || '',
-        hashNodeUrl: requestData.hashNodeUrl || '',
-        devToUrl: requestData.devToUrl || ''
-      }),
-    });
+  async add(_requestData: AlumniRegistrationRequest): Promise<never> {
+    throw new Error('The backend AlumniRequestDTO requires userId and studentRegnNo. Use addDetails after creating the base user.');
   },
 
   async login(requestData: AlumniLoginRequest): Promise<any> {
