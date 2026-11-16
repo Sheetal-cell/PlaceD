@@ -3,15 +3,36 @@ const API_BASE_URL =
 
 let refreshPromise: Promise<string | null> | null = null;
 
+export function getDeviceId(): string {
+  if (typeof window === "undefined") return "server";
+  const storageKey = "placed_device_id";
+  let deviceId = localStorage.getItem(storageKey);
+  if (!deviceId) {
+    deviceId =
+      typeof window.crypto?.randomUUID === "function"
+        ? window.crypto.randomUUID()
+        : `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(storageKey, deviceId);
+  }
+  return deviceId;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function request<T>(
   endpoint: string,
   options?: RequestInit,
   isRetry = false
 ): Promise<T> {
   const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const publicEndpoints = [
     "/auth/",
@@ -20,13 +41,13 @@ async function request<T>(
     "/students/add",
     "/alumni/add",
   ];
-
   const isPublicEndpoint = publicEndpoints.some((path) =>
     endpoint.startsWith(path)
   );
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "X-Device-ID": getDeviceId(),
     ...((options?.headers as Record<string, string>) || {}),
   };
 
@@ -57,7 +78,10 @@ async function request<T>(
                 `${API_BASE_URL}/auth/refresh`,
                 {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Device-ID": getDeviceId(),
+                  },
                   body: JSON.stringify({
                     refreshToken,
                     role: storedRole || undefined,
@@ -65,17 +89,13 @@ async function request<T>(
                 }
               );
 
-              if (!refreshResponse.ok) {
-                return null;
-              }
+              if (!refreshResponse.ok) return null;
 
               const data = await refreshResponse.json();
-              if (data && data.token && data.refreshToken) {
+              if (data?.token && data?.refreshToken) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("refreshToken", data.refreshToken);
-                if (data.role) {
-                  localStorage.setItem("role", data.role);
-                }
+                if (data.role) localStorage.setItem("role", data.role);
                 return data.token as string;
               }
               return null;
@@ -88,10 +108,7 @@ async function request<T>(
         }
 
         const newToken = await refreshPromise;
-
-        if (newToken) {
-          return request<T>(endpoint, options, true);
-        }
+        if (newToken) return request<T>(endpoint, options, true);
       }
 
       localStorage.removeItem("token");
@@ -104,70 +121,52 @@ async function request<T>(
     } else if (
       response.status === 401 &&
       (isRetry || isPublicEndpoint) &&
-      typeof window !== "undefined"
+      typeof window !== "undefined" &&
+      !isPublicEndpoint
     ) {
-      if (!isPublicEndpoint) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("role");
-        localStorage.removeItem("studentId");
-        localStorage.removeItem("recruiterId");
-        localStorage.removeItem("alumniId");
-        window.dispatchEvent(new Event("auth:unauthorized"));
-      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("role");
+      localStorage.removeItem("studentId");
+      localStorage.removeItem("recruiterId");
+      localStorage.removeItem("alumniId");
+      window.dispatchEvent(new Event("auth:unauthorized"));
     }
 
     const errorText = await response.text();
-
     let errorMessage = errorText;
-
     try {
       const jsonErr = JSON.parse(errorText);
-
       if (jsonErr && typeof jsonErr === "object") {
-        if (
-          typeof jsonErr.message === "string" &&
-          jsonErr.message
-        ) {
+        if (typeof jsonErr.message === "string" && jsonErr.message) {
           errorMessage = jsonErr.message;
-        } else if (
-          typeof jsonErr.error === "string" &&
-          jsonErr.error
-        ) {
+        } else if (typeof jsonErr.error === "string" && jsonErr.error) {
           errorMessage = jsonErr.error;
         } else {
           const values = Object.entries(jsonErr)
             .map(([k, v]) => (typeof v === "string" ? `${k}: ${v}` : null))
             .filter(Boolean);
-          if (values.length > 0) {
-            errorMessage = values.join(", ");
-          }
+          if (values.length) errorMessage = values.join(", ");
         }
       }
     } catch {
-      // Not JSON, use errorText
+      // Keep the server's plain-text error.
     }
 
-    throw new Error(
-      errorMessage ||
-        `API request failed with status ${response.status}`
+    throw new ApiError(
+      errorMessage || `API request failed with status ${response.status}`,
+      response.status
     );
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  const text = await response.text();
-
-  if (!text) {
-    return undefined as T;
-  }
+  if (response.status === 204) return undefined as T;
+  const responseText = await response.text();
+  if (!responseText) return undefined as T;
 
   try {
-    return JSON.parse(text);
+    return JSON.parse(responseText);
   } catch {
-    return text as unknown as T;
+    return responseText as unknown as T;
   }
 }
 
