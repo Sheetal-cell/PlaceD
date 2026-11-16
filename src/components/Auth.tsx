@@ -381,7 +381,7 @@ export const Auth: React.FC<AuthProps> = ({
 
           // The backend student profile is keyed by the 12-digit registration number.
           let resolvedStudentId = loginInput;
-          if (!/^\\d{12}$/.test(loginInput)) {
+          if (!/^\d{12}$/.test(loginInput)) {
             const allStudents = await studentApi.getAll();
             const found = allStudents.find(
               (student) => student.email?.toLowerCase().trim() === loginInput.toLowerCase()
