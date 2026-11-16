@@ -58,6 +58,12 @@ export const userApi = {
   sendVerification: (id: number) =>
     request<string>(`/user/${id}/verifyEmail`, { method: "POST" }),
 
+  registerTpo: (userId: number) =>
+    request<{ id: number; userId: number }>("/tpo/register", {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    }),
+
   confirmVerificationToken: (token: string) =>
     request<string>(`/user/verify-email?token=${encodeURIComponent(token)}`),
 
