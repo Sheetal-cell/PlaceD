@@ -30,6 +30,7 @@ import { authApi } from '../api/authApi';
 import { studentApi } from '../api/studentApi';
 import { recruiterApi } from '../api/recruiterApi';
 import { userApi } from '../api/userApi';
+import { companyApi } from '../api/companyApi';
 import { Footer } from './Footer';
 import './Auth.css';
 
@@ -100,6 +101,16 @@ export const Auth: React.FC<AuthProps> = ({
     useState(false);
 
   const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationUserId, setVerificationUserId] = useState<number | null>(null);
+  const [commonPhone, setCommonPhone] = useState('');
+  const [collegeId, setCollegeId] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [addressCity, setAddressCity] = useState('');
+  const [addressState, setAddressState] = useState('');
+  const [addressCountry, setAddressCountry] = useState('India');
+  const [addressPostalCode, setAddressPostalCode] = useState('');
+  const [alumniStudentRegnNo, setAlumniStudentRegnNo] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendAttempts, setResendAttempts] = useState<number[]>([]);
 
@@ -131,12 +142,16 @@ export const Auth: React.FC<AuthProps> = ({
       return;
     }
     try {
-      await authApi.resendVerification({ email: verificationEmail });
+      if (!verificationUserId) {
+        setError('Please contact the placement administrator to resend your verification email.');
+        return;
+      }
       const updatedAttempts = [...recentAttempts, now];
       setResendAttempts(updatedAttempts);
       localStorage.setItem('placed_verification_resend_attempts', JSON.stringify(updatedAttempts));
       setResendCooldown(60);
-      setError('If this account is eligible, a verification email has been sent.');
+      await userApi.sendVerification(verificationUserId);
+      setError('A new verification email has been requested. Check your inbox.');
     } catch (err: any) {
       handleAuthError(err, verificationEmail, 'Unable to resend verification email.');
     }
@@ -187,7 +202,7 @@ export const Auth: React.FC<AuthProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regRegistrationNumber, setRegRegistrationNumber] = useState('');
   const [regPassword, setRegPassword] = useState('');
-  const [regPhone, setRegPhone] = useState('9876543210');
+  const [regPhone, setRegPhone] = useState('');
 
   const [regBranch, setRegBranch] = useState<
     | 'Computer Science'
@@ -199,9 +214,7 @@ export const Auth: React.FC<AuthProps> = ({
 
   const [regCgpa, setRegCgpa] = useState('8.0');
   const [regSkills, setRegSkills] = useState('React, TypeScript, JavaScript');
-  const [regResume, setRegResume] = useState(
-    'Enthusiastic developer skilled in frontend applications.'
-  );
+  const [regResume, setRegResume] = useState('');
 
   /* =========================================================
      ALUMNI REGISTRATION
@@ -724,20 +737,24 @@ export const Auth: React.FC<AuthProps> = ({
 
     setIsSubmitting(true);
     try {
+      const matchingCompany = (await companyApi.getAll()).find(
+        (company) => company.name.trim().toLowerCase() === recCompany.trim().toLowerCase()
+      );
+      if (!matchingCompany) {
+        throw new Error('This company is not registered in PlaceD yet. Ask the TPO to add the company first.');
+      }
+      const baseUser = await createBaseUser(recName.trim(), normalizedEmail, recPassword, 'RECRUITER', commonPhone);
       await recruiterApi.register({
-        name: newRecruiter.name,
-        email: newRecruiter.email,
-        password: newRecruiter.password || 'password',
-        companyName: newRecruiter.companyName,
+        userId: baseUser.id,
+        companyName: matchingCompany.name,
         designation: newRecruiter.designation,
       });
 
       onRegisterRecruiter(newRecruiter);
       setRecruiterEmail(normalizedEmail);
       setRecruiterPassword('');
-      setAuthMode('login');
-      setSearchParams({ mode: 'login' });
-      setError('Recruiter account registered successfully. Please wait for TPO approval before logging in.');
+      await completeRegistration(baseUser.id, normalizedEmail);
+      setError('Recruiter account created. A verification email was requested; TPO approval is also required before recruiter access.');
     } catch (err: any) {
       setError(err?.message || 'Recruiter registration failed.');
     } finally {
@@ -793,18 +810,11 @@ export const Auth: React.FC<AuthProps> = ({
     setIsSubmitting(true);
     try {
       const normalizedEmail = adminEmail.toLowerCase().trim();
-      await userApi.register({
-        name: adminName.trim(),
-        email: normalizedEmail,
-        password: adminPassword,
-      });
-
+      const baseUser = await createBaseUser(adminName.trim(), normalizedEmail, adminPassword, 'TPO', commonPhone);
+      await userApi.registerTpo(baseUser.id);
       setAdminEmail(normalizedEmail);
       setAdminPassword('');
-      setAuthMode('login');
-      setSearchParams({ mode: 'login' });
-      setVerificationEmail(normalizedEmail);
-      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
+      await completeRegistration(baseUser.id, normalizedEmail);
     } catch (err: any) {
       setError(err?.message || 'TPO Admin registration failed.');
     } finally {
@@ -1138,6 +1148,59 @@ export const Auth: React.FC<AuthProps> = ({
                           : 'Resend verification email'}
                     </button>
                   )}
+                </div>
+              )}
+
+              {authMode === 'register' && (
+                <div className="auth-form-scrollable my-4 rounded-xl border border-slate-200 p-4">
+                  <h3 className="font-semibold mb-3">Account details required by PlaceD</h3>
+                  {activeRole !== 'student' && (
+                    <div className="auth-input-group mb-3">
+                      <label className="auth-input-label">Mobile Number *</label>
+                      <input type="tel" required maxLength={10} value={commonPhone}
+                        onChange={(e) => setCommonPhone(e.target.value.replace(/\\D/g, '').slice(0, 10))}
+                        placeholder="10-digit mobile number" className="auth-input-field" />
+                    </div>
+                  )}
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">College ID *</label>
+                    <input type="number" min="1" required value={collegeId}
+                      onChange={(e) => setCollegeId(e.target.value)}
+                      placeholder="College ID provided by your TPO" className="auth-input-field" />
+                    <p className="text-xs text-slate-500 mt-1">The current backend accepts a college ID, but does not expose a college-list endpoint.</p>
+                  </div>
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">Address Line 1 *</label>
+                    <input required value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)}
+                      placeholder="House / street / locality" className="auth-input-field" />
+                  </div>
+                  <div className="auth-input-group mb-3">
+                    <label className="auth-input-label">Address Line 2</label>
+                    <input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)}
+                      placeholder="Apartment / landmark (optional)" className="auth-input-field" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="auth-input-group">
+                      <label className="auth-input-label">City *</label>
+                      <input required value={addressCity} onChange={(e) => setAddressCity(e.target.value)}
+                        className="auth-input-field" />
+                    </div>
+                    <div className="auth-input-group">
+                      <label className="auth-input-label">State *</label>
+                      <input required value={addressState} onChange={(e) => setAddressState(e.target.value)}
+                        className="auth-input-field" />
+                    </div>
+                    <div className="auth-input-group">
+                      <label className="auth-input-label">Country *</label>
+                      <input required value={addressCountry} onChange={(e) => setAddressCountry(e.target.value)}
+                        className="auth-input-field" />
+                    </div>
+                    <div className="auth-input-group">
+                      <label className="auth-input-label">Postal Code *</label>
+                      <input required value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)}
+                        className="auth-input-field" />
+                    </div>
+                  </div>
                 </div>
               )}
 
