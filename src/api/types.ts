@@ -1,30 +1,30 @@
 export interface StudentResponse {
   id: string;
-  name: string;
-  email: string;
+  userId?: number;
+  name?: string;
+  email?: string;
   registrationNumber?: string;
-  phone: string;
+  phone?: string;
   department: string;
   cgpa?: number;
   CGPA?: number;
-  activeBacklogs: number;
+  activeBacklogs?: number;
   resumeUrl: string;
-  year: number;
+  yearOfAdmission?: string;
+  year?: number;
+  dateOfBirth?: string;
   emailVerified?: boolean;
 }
 
 export interface StudentRequest {
   id: string;
-  name: string;
-  email: string;
-  password?: string;
-  phone: string;
   department: string;
+  cgpa: number;
   activeBacklogs?: number;
   resumeUrl: string;
-  year: number;
-  cgpa?: number;
-  CGPA?: number;
+  yearOfAdmission: string;
+  dateOfBirth?: string;
+  userId: number;
 }
 export interface CompanyResponse {
   id: number;
@@ -150,17 +150,16 @@ export type RecruiterStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface RecruiterResponse {
   id: number;
-  name: string;
-  email: string;
+  userId?: number;
+  name?: string;
+  email?: string;
   companyName: string;
   designation?: string;
   industry?: string;
   recruiterStatus: RecruiterStatus;
 }
 export interface RecruiterRequest {
-  name: string;
-  email: string;
-  password: string;
+  userId: number;
   companyName: string;
   designation?: string;
   industry?: string;
