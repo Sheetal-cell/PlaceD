@@ -81,16 +81,16 @@ export const studentApi = {
     request<StudentRoundVisualizerResponse[]>(`/students/stageVisualizer/${id}`),
 
   verifyEmail: (id: string) =>
-    request<string>(`/students/${encodeURIComponent(id)}/verifyEmail`, {
+    request<string>(`/user/${encodeURIComponent(id)}/verifyEmail`, {
       method: "POST",
     }),
 
   confirmVerificationToken: (token: string) =>
-    request<string>(`/students/verify-email?token=${encodeURIComponent(token)}`),
+    request<string>(`/user/verify-email?token=${encodeURIComponent(token)}`),
 
   getAllWithPlacementInfo: async (): Promise<StudentWithPlacement[]> => {
     const [students, applications, jobPostings] = await Promise.all([
-      request<StudentResponse[]>("/students/all").catch(() => []),
+      studentApi.getAll().catch(() => []),
       applicationApi.getAll().catch(() => []),
       jobPostingApi.getAll().catch(() => []),
     ]);
@@ -113,12 +113,12 @@ export const studentApi = {
         : undefined;
       return {
         id: s.id,
-        name: s.name,
-        email: s.email,
+        name: s.name || "",
+        email: s.email || "",
         phone: s.phone,
         department: s.department,
         cgpa: s.cgpa ?? s.CGPA ?? 0,
-        backlogs: s.activeBacklogs,
+        backlogs: s.activeBacklogs ?? 0,
         placementStatus: placedApp ? "Placed" : "Unplaced",
         placedCompany: placedApp?.companyName,
         placedPackage: placedPosting?.salary != null
