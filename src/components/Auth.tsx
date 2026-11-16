@@ -99,6 +99,58 @@ export const Auth: React.FC<AuthProps> = ({
   const [showPassword, setShowPassword] =
     useState(false);
 
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendAttempts, setResendAttempts] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setTimeout(
+      () => setResendCooldown((seconds) => Math.max(0, seconds - 1)),
+      1000
+    );
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleAuthError = (err: any, email: string, fallback: string) => {
+    if (err?.status === 403) {
+      setVerificationEmail(email.trim().toLowerCase());
+      setError('Your email address is not verified. Verify it or request a new verification email.');
+      return;
+    }
+    setError(err?.message || fallback);
+  };
+
+  const handleResendVerification = async () => {
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    const recentAttempts = resendAttempts.filter((time) => time > oneHourAgo);
+    if (resendCooldown > 0) return;
+    if (recentAttempts.length >= 3) {
+      setError('You have reached the resend limit. Please try again after an hour.');
+      return;
+    }
+    try {
+      await authApi.resendVerification({ email: verificationEmail });
+      const updatedAttempts = [...recentAttempts, now];
+      setResendAttempts(updatedAttempts);
+      localStorage.setItem('placed_verification_resend_attempts', JSON.stringify(updatedAttempts));
+      setResendCooldown(60);
+      setError('If this account is eligible, a verification email has been sent.');
+    } catch (err: any) {
+      handleAuthError(err, verificationEmail, 'Unable to resend verification email.');
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('placed_verification_resend_attempts') || '[]');
+      if (Array.isArray(saved)) setResendAttempts(saved.filter((value) => typeof value === 'number'));
+    } catch {
+      setResendAttempts([]);
+    }
+  }, []);
+
   useEffect(() => {
     const modeParam = searchParams.get('mode');
 
@@ -248,7 +300,7 @@ export const Auth: React.FC<AuthProps> = ({
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('role');
-        setError(err?.message || 'Invalid student credentials.');
+        handleAuthError(err, loginInput, 'Invalid student credentials.');
       } finally {
         setIsSubmitting(false);
       }
@@ -403,9 +455,8 @@ export const Auth: React.FC<AuthProps> = ({
       setAuthMode('login');
       setSearchParams({ mode: 'login' });
 
-      setError(
-        'Student account created successfully. You can now sign in.'
-      );
+      setVerificationEmail(normalizedEmail);
+      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
     } catch (err: any) {
       setError(err?.message || 'Student registration failed.');
     } finally {
@@ -471,7 +522,7 @@ export const Auth: React.FC<AuthProps> = ({
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('role');
         localStorage.removeItem('alumniId');
-        setError(err?.message || 'Invalid alumni credentials.');
+        handleAuthError(err, loginEmail, 'Invalid alumni credentials.');
       } finally {
         setIsSubmitting(false);
       }
@@ -557,7 +608,8 @@ export const Auth: React.FC<AuthProps> = ({
       setStudentPassword('');
       setAuthMode('login');
       setSearchParams({ mode: 'login' });
-      setError('Alumni account created successfully. You can now sign in.');
+      setVerificationEmail(normalizedEmail);
+      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Unable to register alumni.'
@@ -631,7 +683,7 @@ export const Auth: React.FC<AuthProps> = ({
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('role');
         localStorage.removeItem('recruiterId');
-        setError(err?.message || 'Invalid recruiter credentials.');
+        handleAuthError(err, recruiterEmail, 'Invalid recruiter credentials.');
       } finally {
         setIsSubmitting(false);
       }
@@ -725,7 +777,7 @@ export const Auth: React.FC<AuthProps> = ({
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('role');
-        setError(err?.message || 'Unable to log in as administrator.');
+        handleAuthError(err, adminEmail, 'Unable to log in as administrator.');
       } finally {
         setIsSubmitting(false);
       }
@@ -751,7 +803,8 @@ export const Auth: React.FC<AuthProps> = ({
       setAdminPassword('');
       setAuthMode('login');
       setSearchParams({ mode: 'login' });
-      setError('TPO Admin account created successfully. You can now sign in.');
+      setVerificationEmail(normalizedEmail);
+      setError('Registration submitted. Please check your inbox for the verification email before signing in.');
     } catch (err: any) {
       setError(err?.message || 'TPO Admin registration failed.');
     } finally {
@@ -1071,6 +1124,20 @@ export const Auth: React.FC<AuthProps> = ({
                   <span className="auth-error-dot" />
 
                   <span>{error}</span>
+                  {verificationEmail && (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={isSubmitting || resendCooldown > 0 || resendAttempts.filter((time) => time > Date.now() - 60 * 60 * 1000).length >= 3}
+                      className="ml-2 underline font-semibold disabled:opacity-50"
+                    >
+                      {resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : resendAttempts.filter((time) => time > Date.now() - 60 * 60 * 1000).length >= 3
+                          ? 'Resend limit reached'
+                          : 'Resend verification email'}
+                    </button>
+                  )}
                 </div>
               )}
 
