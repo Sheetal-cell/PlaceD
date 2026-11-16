@@ -114,6 +114,7 @@ export const studentApi = {
         : undefined;
       return {
         id: s.id,
+        userId: s.userId,
         name: s.name || "",
         email: s.email || "",
         phone: s.phone,
