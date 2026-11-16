@@ -21,10 +21,28 @@ function normalizeDepartment(dept?: string): string {
   return "Computer Science";
 }
 
-export const studentApi = {
-  getAll: () => request<StudentResponse[]>("/students/all"),
+async function enrichStudent(student: StudentResponse): Promise<StudentResponse> {
+  if (!student.userId) return student;
+  const user = await request<any>(`/user/${student.userId}`).catch(() => null);
+  const name = user?.nameResponseDTO
+    ? [user.nameResponseDTO.firstName, user.nameResponseDTO.middleName, user.nameResponseDTO.lastName].filter(Boolean).join(" ")
+    : "";
+  return {
+    ...student,
+    name,
+    email: user?.email || "",
+    phone: user?.phone || "",
+    emailVerified: Boolean(user?.emailVerified),
+  };
+}
 
-  getById: (id: string) => request<StudentResponse>(`/students/${id}`),
+export const studentApi = {
+  getAll: async () => {
+    const students = await request<StudentResponse[]>("/students/all");
+    return Promise.all((students || []).map(enrichStudent));
+  },
+
+  getById: async (id: string) => enrichStudent(await request<StudentResponse>(`/students/${id}`)),
 
   add: (data: StudentRequest) =>
     request<StudentResponse>("/students/add", {
