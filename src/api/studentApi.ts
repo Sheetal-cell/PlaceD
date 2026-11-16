@@ -22,7 +22,7 @@ function normalizeDepartment(dept?: string): string {
 }
 
 async function enrichStudent(student: StudentResponse): Promise<StudentResponse> {
-  if (!student.userId) return student;
+  if (!student.userId) return { ...student, name: student.name || '', email: student.email || '', phone: student.phone || '', year: student.year ?? 0 };
   const user = await request<any>(`/user/${student.userId}`).catch(() => null);
   const name = user?.nameResponseDTO
     ? [user.nameResponseDTO.firstName, user.nameResponseDTO.middleName, user.nameResponseDTO.lastName].filter(Boolean).join(" ")
