@@ -45,7 +45,7 @@ async function request<T>(
   ];
   const isPublicEndpoint =
     publicEndpoints.some((path) => endpoint.startsWith(path)) ||
-    /^\\/user\\/\\d+\\/verifyEmail/.test(endpoint);
+    /^\/user\/\d+\/verifyEmail/.test(endpoint);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
