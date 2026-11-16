@@ -8,6 +8,8 @@ export type BlogCategory =
 
 export interface Alumni {
   id: string;
+  userId?: number;
+  studentRegnNo?: string;
   name: string;
   email: string;
   password?: string;
@@ -138,6 +140,8 @@ export const alumniApi = {
         : '';
       return {
         id: String(a.id),
+        userId: a.userId,
+        studentRegnNo: a.studentRegnNo,
         name,
         email: user?.email || '',
         bio: a.bio || '',
@@ -160,6 +164,8 @@ export const alumniApi = {
       : '';
     return {
       id: String(a.id),
+      userId: a.userId,
+      studentRegnNo: a.studentRegnNo,
       name,
       email: user?.email || '',
       bio: a.bio || '',
@@ -337,43 +343,46 @@ export const alumniApi = {
   },
 
   async updateProfile(id: string | number, requestData: AlumniProfileRequest): Promise<any> {
-    const existing = await this.getById(id).catch(() => null);
-    const emailToUse = requestData.email || existing?.email || getCurrentUserEmail();
-
+    const existing = await this.getById(id);
+    if (!existing.userId || !existing.studentRegnNo) {
+      throw new Error('This alumni profile is missing its linked user or student record.');
+    }
+    const bio = requestData.bio ??
+      [requestData.currentRole, requestData.currentCompany,
+       requestData.graduationYear ? `Graduation year: ${requestData.graduationYear}` : '',
+       requestData.department ? `Department: ${requestData.department}` : '']
+        .filter(Boolean).join(' | ');
     return request<string>(`/alumni/update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
-        id: Number(id),
-        name: requestData.name || existing?.name || '',
-        email: emailToUse,
-        password: 'password',
-        bio: requestData.bio || requestData.currentRole || existing?.bio || '',
-        location: requestData.location || existing?.location || '',
-        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || existing?.linkedinUrl || '',
-        githubUrl: requestData.githubUrl || existing?.githubUrl || '',
-        hashNodeUrl: requestData.hashNodeUrl || existing?.hashNodeUrl || '',
-        devToUrl: requestData.devToUrl || existing?.devToUrl || ''
+        userId: existing.userId,
+        studentRegnNo: existing.studentRegnNo,
+        bio,
+        location: requestData.location ?? existing.location ?? '',
+        linkedinUrl: requestData.linkedinUrl ?? requestData.linkedIn ?? existing.linkedinUrl ?? '',
+        githubUrl: requestData.githubUrl ?? existing.githubUrl ?? '',
+        hashNodeUrl: requestData.hashNodeUrl ?? existing.hashNodeUrl ?? '',
+        devToUrl: requestData.devToUrl ?? existing.devToUrl ?? '',
       }),
     });
   },
 
   async update(id: string | number, requestData: Partial<Alumni>): Promise<any> {
-    const existing = await this.getById(id).catch(() => null);
-    const emailToUse = requestData.email || existing?.email || getCurrentUserEmail();
-
+    const existing = await this.getById(id);
+    if (!existing.userId || !existing.studentRegnNo) {
+      throw new Error('This alumni profile is missing its linked user or student record.');
+    }
     return request<string>(`/alumni/update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
-        id: Number(id),
-        name: requestData.name || existing?.name || '',
-        email: emailToUse,
-        password: 'password',
-        bio: requestData.bio || requestData.currentRole || existing?.bio || '',
-        location: requestData.location || existing?.location || '',
-        linkedinUrl: requestData.linkedinUrl || requestData.linkedIn || existing?.linkedinUrl || '',
-        githubUrl: requestData.githubUrl || existing?.githubUrl || '',
-        hashNodeUrl: requestData.hashNodeUrl || existing?.hashNodeUrl || '',
-        devToUrl: requestData.devToUrl || existing?.devToUrl || ''
+        userId: existing.userId,
+        studentRegnNo: existing.studentRegnNo,
+        bio: requestData.bio ?? existing.bio ?? '',
+        location: requestData.location ?? existing.location ?? '',
+        linkedinUrl: requestData.linkedinUrl ?? requestData.linkedIn ?? existing.linkedinUrl ?? '',
+        githubUrl: requestData.githubUrl ?? existing.githubUrl ?? '',
+        hashNodeUrl: requestData.hashNodeUrl ?? existing.hashNodeUrl ?? '',
+        devToUrl: requestData.devToUrl ?? existing.devToUrl ?? '',
       }),
     });
   },
