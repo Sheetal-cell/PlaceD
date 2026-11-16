@@ -33,7 +33,6 @@ async function enrichStudent(student: StudentResponse): Promise<StudentResponse>
     email: user?.email || "",
     phone: user?.phone || "",
     emailVerified: Boolean(user?.emailVerified),
-    year: Number(student.yearOfAdmission) || 0,
   };
 }
 
@@ -115,6 +114,7 @@ export const studentApi = {
       return {
         id: s.id,
         userId: s.userId,
+        yearOfAdmission: s.yearOfAdmission,
         name: s.name || "",
         email: s.email || "",
         phone: s.phone,
