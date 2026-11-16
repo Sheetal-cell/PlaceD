@@ -182,7 +182,7 @@ export const alumniApi = {
     // No-op: Data is maintained in PostgreSQL database
   },
 
-  async register(_requestData: AlumniRegistrationRequest): Promise<never> {
+  async register(_requestData: AlumniRegistrationRequest): Promise<any> {
     throw new Error('Alumni registration requires a base user account and an existing student registration number. Use the two-step registration flow in Auth.');
   },
 
@@ -202,7 +202,7 @@ export const alumniApi = {
     });
   },
 
-  async add(_requestData: AlumniRegistrationRequest): Promise<never> {
+  async add(_requestData: AlumniRegistrationRequest): Promise<any> {
     throw new Error('The backend AlumniRequestDTO requires userId and studentRegnNo. Use addDetails after creating the base user.');
   },
 
