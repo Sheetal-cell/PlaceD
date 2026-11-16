@@ -151,8 +151,8 @@ export type RecruiterStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface RecruiterResponse {
   id: number;
   userId?: number;
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
   companyName: string;
   designation?: string;
   industry?: string;
