@@ -500,6 +500,7 @@ function AppContent() {
             (storedStudentId && (sIdKey === storedStudentId.toLowerCase().trim()) ? appsByStudent.get(storedStudentId.toLowerCase().trim()) : undefined) || [];
           return {
             id: s.id,
+            userId: s.userId,
             name: s.name,
             email: s.email,
             phone: s.phone || '9876543210',
@@ -514,7 +515,7 @@ function AppContent() {
             resumeScore: 85,
             skills: [],
             projectsCount: 0,
-            resumeText: '',
+            resumeText: s.resumeUrl || '',
             applications: studentApps,
             department: s.department,
             emailVerified: s.emailVerified,
@@ -528,6 +529,7 @@ function AppContent() {
               const sIdKey = String(singleStudent.id).toLowerCase().trim();
               mappedStudents.push({
                 id: singleStudent.id,
+                userId: singleStudent.userId,
                 name: singleStudent.name,
                 email: singleStudent.email,
                 phone: singleStudent.phone || '9876543210',
